@@ -1,5 +1,5 @@
 hi# All Walks Academy — Website + Booking Backend
-  
+   
 This is a full booking system: a website, a shared live-availability database,
 and Stripe payments that save a client's card so no-shows can be charged
 afterwards.
