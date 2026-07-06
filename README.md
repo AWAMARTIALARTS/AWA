@@ -1,4 +1,4 @@
-# All Walks Academy — Website + Booking Backend
+hi# All Walks Academy — Website + Booking Backend
 
 This is a full booking system: a website, a shared live-availability database,
 and Stripe payments that save a client's card so no-shows can be charged
@@ -8,7 +8,7 @@ afterwards.
 Prices and categories live in the `services` table in Supabase — add a new
 row there (Table Editor → services) to add a new bookable option, no code
 needed.
-
+ 
 ## Manual bookings
 `admin.html` has an "Add a Booking Manually" form for phone/cash bookings.
 These don't have a card saved, so no-shows on them must be charged another way.
