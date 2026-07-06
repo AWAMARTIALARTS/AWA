@@ -169,11 +169,7 @@
   <section class="hero">
     <div class="wrap">
       <div class="eyebrow">Discipline · Respect · Growth</div>
-      <div class="ring">
-        <span class="thai left">มวย</span>
-        <div class="ring-core">ALL WALKS<span>ACADEMY</span></div>
-        <span class="thai right">ไทย</span>
-      </div>
+      <img src="logo.png" alt="All Walks Academy" style="width:240px; height:240px; margin:0 auto 32px; border-radius:50%; object-fit:cover; display:block; border:1.5px solid var(--gold);">
       <h1>Muay Thai<br>for All</h1>
       <p class="sub">Every background. Every body. One ring.</p>
       <div class="paths">
@@ -186,4 +182,556 @@
         <div class="path-card ac">
           <span class="tag">Path Two</span>
           <h3>Academy Training</h3>
-          <p>Structured 4-week group
+          <p>Structured 4-week group training themes. Pay your session fee, then unlock the calendar to pick your class.</p>
+          <button class="btn btn-primary" onclick="showPage('ac')">Explore Academy Training</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="page" id="page-pt">
+  <section class="pt-hero">
+    <div class="wrap">
+      <div class="eyebrow">Path One</div>
+      <h1>Personal Training</h1>
+      <p class="sub" style="font-family:'Cormorant Garamond',serif; font-style:italic; opacity:0.85; margin-top:10px;">1-1 and 2-1 coaching. Weekends only, limited slots.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">The Fight Card</div>
+        <h2>Personal Training Pricing</h2>
+        <p>1-1, 2-1, and 4-1 pay-and-book instantly. 1-1, 2-1, and the 4-week block take a 50% deposit now — the calendar then unlocks so you can choose your time.</p>
+      </div>
+
+      <div class="fightcard">
+        <div class="fightcard-header"><span>Per Session</span><span>50% Deposit Now · 50% at Lesson</span></div>
+        <div class="bout">
+          <div class="corner blue">
+            <span class="tag">1-to-1</span><h3>Solo Coaching</h3>
+            <div class="price">£45<span> / session</span></div>
+            <p class="note">One-on-one, fully personalised</p>
+          </div>
+          <div class="vs">VS</div>
+          <div class="corner red">
+            <span class="tag">2-to-1</span><h3>Partner Coaching</h3>
+            <div class="price">£55<span> / session</span></div>
+            <p class="note">Train with a friend, split the energy</p>
+          </div>
+        </div>
+        <div class="bout block">
+          <span class="tag">4-Week Block</span>
+          <h3>4 Sessions — 1 Per Week</h3>
+          <div class="price">£160<span> total</span></div>
+          <p class="note" style="font-size:15px; margin-top:10px;">
+            <strong style="color:var(--gold-bright);">£80 (50%) taken on booking</strong> · remaining £80 due at your first session
+          </p>
+        </div>
+      </div>
+
+      <div class="fightcard" style="margin-top:24px;">
+        <div class="fightcard-header"><span>Small Group</span><span>100% Charged at Booking</span></div>
+        <div class="bout block">
+          <span class="tag">4-1 Small Group</span>
+          <h3>Train With Up To 3 Others</h3>
+          <div class="price">£25<span> per person</span></div>
+          <p class="note">Pick an open group session below — each person pays their own £25 to join</p>
+        </div>
+      </div>
+
+      <div class="avail" id="groupAvailability">
+        <div class="section-head" style="margin-bottom:24px;">
+          <div class="eyebrow">Live Availability</div>
+          <h2 style="font-size:24px;">4-1 Group Sessions</h2>
+          <p>Click an open session to join it — you'll pay your £25 immediately to lock your spot.</p>
+        </div>
+        <div id="groupSlotsContainer"><p style="text-align:center; font-family:'Inter',sans-serif; opacity:0.6;">Loading availability…</p></div>
+        <form id="groupForm" style="max-width:480px; margin:24px auto 0; display:none;">
+          <div class="form-grid">
+            <div class="field full"><label for="groupName">Full Name</label><input type="text" id="groupName" required></div>
+            <div class="field full"><label for="groupEmail">Email</label><input type="email" id="groupEmail" required></div>
+            <div class="field full"><label for="groupPhone">Phone</label><input type="tel" id="groupPhone" required></div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;" id="groupSubmitBtn">Pay £25 &amp; Join This Session</button>
+          <div id="groupMsg"></div>
+        </form>
+      </div>
+
+      <hr class="rule" style="max-width:400px; margin:60px auto;">
+
+      <div class="section-head" style="margin-bottom:24px;">
+        <div class="eyebrow">1-1, 2-1 &amp; 4-Week Block</div>
+        <h2 style="font-size:26px;">Pay Your Deposit to Unlock the Calendar</h2>
+      </div>
+
+      <form class="booking" id="ptForm">
+        <div class="form-grid">
+          <div class="field"><label for="ptName">Full Name</label><input type="text" id="ptName" required></div>
+          <div class="field"><label for="ptEmail">Email</label><input type="email" id="ptEmail" required></div>
+          <div class="field"><label for="ptPhone">Phone</label><input type="tel" id="ptPhone" required></div>
+          <div class="field">
+            <label for="ptType">Session Type</label>
+            <select id="ptType" required>
+              <option value="" disabled selected>Loading options…</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="summary" id="ptSummary" style="display:none;">
+          <div class="summary-row"><span class="muted">Full price</span><span id="ptFee">£0</span></div>
+          <div class="summary-row"><span class="muted">Due at first lesson</span><span id="ptBalance">£0</span></div>
+          <div class="summary-row total"><span>Deposit due now (50%, non-refundable)</span><span id="ptDeposit">£0</span></div>
+        </div>
+
+        <div class="checkfield">
+          <input type="checkbox" id="ptNoShow" required>
+          <label for="ptNoShow"><strong>No-show policy:</strong> I understand that missing a booked session without notice is treated as a no-show, and the full 100% session fee is accepted as chargeable and will be taken from my account for no-shows.</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;" id="ptSubmitBtn">Pay Deposit &amp; Unlock Calendar</button>
+        <div class="pay-methods"><span class="chip">Card</span><span class="chip">Apple Pay</span><span class="chip">Pay by Bank</span></div>
+        <div id="ptMsg"></div>
+      </form>
+
+      <div class="avail" id="ptCalendar" style="display:none;">
+        <div class="section-head" style="margin-bottom:24px;">
+          <div class="eyebrow">Booking Unlocked</div>
+          <h2 style="font-size:24px;" id="ptCalendarTitle">Choose Your Session</h2>
+        </div>
+        <div id="ptCalendarSlots"></div>
+        <div id="ptCalendarMsg" style="text-align:center; margin-top:16px; font-family:'Inter',sans-serif;"></div>
+      </div>
+
+      <div class="policy-note"><strong>Deposit policy:</strong> the 50% deposit is non-refundable and secures your personal training booking. The remaining 50% balance is paid directly at your first lesson. Cards are securely saved by Stripe for no-show billing. 4-1 group sessions are charged in full at booking.</div>
+    </div>
+  </section>
+</div>
+
+<div class="page" id="page-ac">
+  <section class="ac-hero">
+    <div class="wrap">
+      <div class="eyebrow">Path Two</div>
+      <h1>Academy Training</h1>
+      <p class="sub" style="font-family:'Cormorant Garamond',serif; font-style:italic; opacity:0.85; margin-top:10px;">Structured 4-week themed group training.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">This Month's Theme</div>
+        <h2>Structured 4-Week Training</h2>
+        <p>Every 4-week block follows a single theme, building skill session by session.</p>
+      </div>
+
+      <div class="ac-info">
+        <div class="ac-info-item"><h3>Session Times</h3><p>Tuesdays, 6:30pm – 7:30pm</p><p>Thursdays, 6:30pm – 7:30pm</p></div>
+        <div class="ac-info-item"><h3>Location</h3><p>All Walks Academy Training Hall</p><p>[Add your studio address here]</p></div>
+      </div>
+
+      <div class="ac-pricing">
+        <div class="price-card"><span class="tag">Structured Programme</span><h3>4-Week Membership</h3><div class="price">£50<span> / month</span></div><p class="note">Full access to the themed 4-week block</p></div>
+        <div class="price-card"><span class="tag">Drop-In</span><h3>Pay As You Go</h3><div class="price">£10<span> / session</span></div><p class="note">No commitment, pay per class</p></div>
+      </div>
+
+      <div class="lock-box" id="acLockBox">
+        <div class="icon">🔒</div>
+        <h3>Booking Is Locked</h3>
+        <p>AWA Self-Defence &amp; Academy sessions are booked after payment. Pay the full session fee below to unlock the live calendar and choose your class time.</p>
+        <div class="form-grid" style="text-align:left; max-width:480px; margin:0 auto 20px;">
+          <div class="field full"><label for="acEmail">Email</label><input type="email" id="acEmail" required></div>
+          <div class="field full">
+            <label for="acPlan">Choose Your Option</label>
+            <select id="acPlan" required>
+              <option value="" disabled selected>Loading options…</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="acPayBtn">Pay Full Fee &amp; Unlock Booking</button>
+        <div class="pay-methods"><span class="chip">Card</span><span class="chip">Apple Pay</span><span class="chip">Pay by Bank</span></div>
+        <div id="acMsg"></div>
+      </div>
+
+      <div class="ac-calendar" id="acCalendar">
+        <div class="section-head" style="margin-bottom:24px;"><div class="eyebrow">Booking Unlocked</div><h2 style="font-size:26px;">Choose Your Session</h2></div>
+        <div class="cal-slots" id="acSlotsContainer"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="brand">ALL WALKS ACADEMY</div>
+    <div class="eyebrow">Discipline · Respect · Growth</div>
+    <hr class="rule" style="max-width:200px; margin:20px auto;">
+    <p class="copy">© <span id="year"></span> All Walks Academy. All rights reserved.</p>
+  </div>
+</footer>
+
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.navlinks button').forEach(b => b.classList.toggle('active', b.dataset.nav === name));
+  window.scrollTo({top:0, behavior:'instant'});
+}
+
+let PT_PRICES = {};
+
+async function loadPtServiceOptions(){
+  const select = document.getElementById('ptType');
+  try{
+    const res = await fetch('/api/services?category=personal_training');
+    const { services } = await res.json();
+    select.innerHTML = '<option value="" disabled selected>Choose an option</option>';
+    services.forEach(s => {
+      PT_PRICES[s.key] = { label: s.label, fee: s.fee, mode: s.mode };
+      const opt = document.createElement('option');
+      opt.value = s.key;
+      opt.textContent = `${s.label} — £${s.fee}`;
+      select.appendChild(opt);
+    });
+  } catch(err){
+    select.innerHTML = '<option value="" disabled selected>Couldn\'t load options — please refresh</option>';
+  }
+}
+loadPtServiceOptions();
+
+let selectedGroupSlotId = null;
+
+async function loadGroupAvailability(){
+  const container = document.getElementById('groupSlotsContainer');
+  try{
+    const res = await fetch('/api/availability?category=group_training');
+    const { slots } = await res.json();
+    if(!slots.length){
+      container.innerHTML = '<p style="text-align:center; font-family:\'Inter\',sans-serif; opacity:0.6;">No group sessions are open right now — check back soon.</p>';
+      return;
+    }
+    container.innerHTML = '';
+    const slotsEl = document.createElement('div');
+    slotsEl.className = 'slots';
+    slots.forEach(s => {
+      const label = new Date(s.slot_date + 'T00:00:00').toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric' });
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'slot' + (s.full ? ' booked' : '');
+      btn.textContent = `${label} · ${s.slot_time} (${s.spots_left}/${s.capacity} spots left)`;
+      if(s.full){ btn.disabled = true; btn.title = 'Full'; }
+      else {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#groupSlotsContainer .slot').forEach(el => el.classList.remove('selected'));
+          btn.classList.add('selected');
+          selectedGroupSlotId = s.id;
+          document.getElementById('groupForm').style.display = 'block';
+        });
+      }
+      slotsEl.appendChild(btn);
+    });
+    container.appendChild(slotsEl);
+  } catch(err){
+    container.innerHTML = '<p style="text-align:center; font-family:\'Inter\',sans-serif; opacity:0.6;">Couldn\'t load live availability. Please refresh.</p>';
+  }
+}
+loadGroupAvailability();
+
+document.getElementById('groupForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const msg = document.getElementById('groupMsg');
+  const btn = document.getElementById('groupSubmitBtn');
+  if(!selectedGroupSlotId) return;
+  btn.disabled = true; btn.textContent = 'Redirecting to payment…';
+  try{
+    const res = await fetch('/api/create-pt-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_type: 'fourtoone',
+        slot_id: selectedGroupSlotId,
+        name: document.getElementById('groupName').value,
+        email: document.getElementById('groupEmail').value,
+        phone: document.getElementById('groupPhone').value
+      })
+    });
+    const data = await res.json();
+    if(data.url){ window.location.href = data.url; }
+    else {
+      msg.style.display = 'block'; msg.innerHTML = data.error || 'Something went wrong.';
+      btn.disabled = false; btn.textContent = 'Pay £25 & Join This Session';
+    }
+  } catch(err){
+    msg.style.display = 'block';
+    msg.innerHTML = 'Couldn\'t reach the booking service — please try again shortly.';
+    btn.disabled = false; btn.textContent = 'Pay £25 & Join This Session';
+  }
+});
+
+const ptType = document.getElementById('ptType');
+const ptSummary = document.getElementById('ptSummary');
+function updatePtSummary(){
+  const key = ptType.value;
+  if(!key){ ptSummary.style.display = 'none'; return; }
+  const p = PT_PRICES[key];
+  const deposit = (p.fee / 2).toFixed(2).replace(/\.00$/, '');
+  const balance = (p.fee - p.fee/2).toFixed(2).replace(/\.00$/, '');
+  document.getElementById('ptFee').textContent = '£' + p.fee;
+  document.getElementById('ptBalance').textContent = '£' + balance;
+  document.getElementById('ptDeposit').textContent = '£' + deposit;
+  ptSummary.style.display = 'block';
+}
+ptType.addEventListener('change', updatePtSummary);
+
+document.getElementById('ptForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const msg = document.getElementById('ptMsg');
+  const btn = document.getElementById('ptSubmitBtn');
+  const key = ptType.value;
+  if(!key) return;
+  btn.disabled = true; btn.textContent = 'Redirecting to payment…';
+  try{
+    const res = await fetch('/api/create-pt-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_type: key,
+        name: document.getElementById('ptName').value,
+        email: document.getElementById('ptEmail').value,
+        phone: document.getElementById('ptPhone').value
+      })
+    });
+    const data = await res.json();
+    if(data.url){
+      window.location.href = data.url;
+    } else {
+      msg.style.display = 'block';
+      msg.innerHTML = data.error || 'Something went wrong — please try again.';
+      btn.disabled = false; btn.textContent = 'Pay Deposit & Unlock Calendar';
+    }
+  } catch(err){
+    msg.style.display = 'block';
+    msg.innerHTML = 'Couldn\'t reach the booking service — please try again shortly.';
+    btn.disabled = false; btn.textContent = 'Pay Deposit & Unlock Calendar';
+  }
+});
+
+async function unlockPtCalendarIfPaid(){
+  const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
+  if(params.get('paid') !== '1') return;
+  const sessionId = params.get('session_id');
+  const serviceType = params.get('type');
+  if(!sessionId) return;
+
+  const verifyRes = await fetch('/api/verify-pt-payment?session_id=' + encodeURIComponent(sessionId));
+  const verify = await verifyRes.json();
+  if(!verify.valid) return;
+
+  document.getElementById('ptCalendar').style.display = 'block';
+  const availRes = await fetch('/api/availability?category=personal_training');
+  const { slots } = await availRes.json();
+
+  if(serviceType === 'block4'){
+    document.getElementById('ptCalendarTitle').textContent = 'Choose 4 Sessions — One Per Week';
+    renderBlockPicker(slots, verify.booking_id);
+  } else {
+    document.getElementById('ptCalendarTitle').textContent = 'Choose Your Session Time';
+    renderSinglePicker(slots, verify.booking_id);
+  }
+}
+
+function renderSinglePicker(slots, bookingId){
+  const container = document.getElementById('ptCalendarSlots');
+  container.innerHTML = '';
+  const byDate = {};
+  slots.forEach(s => { (byDate[s.slot_date] = byDate[s.slot_date] || []).push(s); });
+  Object.keys(byDate).sort().forEach(date => {
+    const label = new Date(date + 'T00:00:00').toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric' });
+    const dayWrap = document.createElement('div');
+    dayWrap.className = 'avail-day';
+    dayWrap.innerHTML = `<h3>${label}</h3><div class="slots"></div>`;
+    const slotsEl = dayWrap.querySelector('.slots');
+    byDate[date].forEach(s => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'slot' + (s.full ? ' booked' : '');
+      btn.textContent = s.slot_time;
+      if(s.full){ btn.disabled = true; }
+      else {
+        btn.addEventListener('click', async () => {
+          const bookRes = await fetch('/api/book-pt-slot', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ booking_id: bookingId, slot_id: s.id })
+          });
+          const bookData = await bookRes.json();
+          const msgEl = document.getElementById('ptCalendarMsg');
+          if(bookData.success){
+            btn.textContent += ' ✓ Booked';
+            document.querySelectorAll('#ptCalendarSlots .slot').forEach(el => el.disabled = true);
+            msgEl.textContent = 'Your session is booked. See you then!';
+          } else {
+            msgEl.textContent = bookData.error || 'Something went wrong.';
+          }
+        });
+      }
+      slotsEl.appendChild(btn);
+    });
+    container.appendChild(dayWrap);
+  });
+}
+
+function renderBlockPicker(slots, bookingId){
+  const container = document.getElementById('ptCalendarSlots');
+  container.innerHTML = '';
+  const chosen = [];
+  const byDate = {};
+  slots.forEach(s => { (byDate[s.slot_date] = byDate[s.slot_date] || []).push(s); });
+
+  Object.keys(byDate).sort().forEach(date => {
+    const label = new Date(date + 'T00:00:00').toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric' });
+    const dayWrap = document.createElement('div');
+    dayWrap.className = 'avail-day';
+    dayWrap.innerHTML = `<h3>${label}</h3><div class="slots"></div>`;
+    const slotsEl = dayWrap.querySelector('.slots');
+    byDate[date].forEach(s => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'slot' + (s.full ? ' booked' : '');
+      btn.textContent = s.slot_time;
+      if(s.full){ btn.disabled = true; }
+      else {
+        btn.addEventListener('click', () => {
+          const idx = chosen.findIndex(c => c.id === s.id);
+          if(idx >= 0){ chosen.splice(idx, 1); btn.classList.remove('selected'); }
+          else if(chosen.length < 4){ chosen.push(s); btn.classList.add('selected'); }
+          document.getElementById('ptCalendarMsg').textContent = `${chosen.length}/4 sessions selected — one per week.`;
+        });
+      }
+      slotsEl.appendChild(btn);
+    });
+    container.appendChild(dayWrap);
+  });
+
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'btn btn-primary';
+  confirmBtn.style.cssText = 'display:block; margin:24px auto 0;';
+  confirmBtn.textContent = 'Confirm My 4 Weekly Sessions';
+  confirmBtn.addEventListener('click', async () => {
+    const msgEl = document.getElementById('ptCalendarMsg');
+    if(chosen.length !== 4){ msgEl.textContent = 'Please choose exactly 4 sessions, one per week.'; return; }
+    const bookRes = await fetch('/api/book-pt-slot', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ booking_id: bookingId, slot_ids: chosen.map(c => c.id) })
+    });
+    const bookData = await bookRes.json();
+    if(bookData.success){
+      msgEl.textContent = 'Your 4-week block is booked. See you then!';
+      document.querySelectorAll('#ptCalendarSlots .slot').forEach(el => el.disabled = true);
+      confirmBtn.disabled = true;
+    } else {
+      msgEl.textContent = bookData.error || 'Something went wrong.';
+    }
+  });
+  container.appendChild(confirmBtn);
+}
+
+async function loadAcademyServiceOptions(){
+  const select = document.getElementById('acPlan');
+  try{
+    const res = await fetch('/api/services?category=academy');
+    const { services } = await res.json();
+    select.innerHTML = '<option value="" disabled selected>Choose an option</option>';
+    services.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.key;
+      opt.textContent = `${s.label} — £${s.fee}${s.mode === 'subscription' ? '/month' : ''}`;
+      select.appendChild(opt);
+    });
+  } catch(err){
+    select.innerHTML = '<option value="" disabled selected>Couldn\'t load options — please refresh</option>';
+  }
+}
+loadAcademyServiceOptions();
+
+document.getElementById('acPayBtn').addEventListener('click', async () => {
+  const msg = document.getElementById('acMsg');
+  const plan = document.getElementById('acPlan').value;
+  const email = document.getElementById('acEmail').value;
+  if(!email || !plan){
+    msg.style.display = 'block';
+    msg.innerHTML = 'Please enter your email and choose an option first.';
+    return;
+  }
+  try{
+    const res = await fetch('/api/create-academy-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan, email })
+    });
+    const data = await res.json();
+    if(data.url){ window.location.href = data.url; }
+    else { msg.style.display = 'block'; msg.innerHTML = data.error || 'Something went wrong.'; }
+  } catch(err){
+    msg.style.display = 'block';
+    msg.innerHTML = 'Couldn\'t reach the booking service — please try again shortly.';
+  }
+});
+
+async function unlockAcademyIfPaid(){
+  const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
+  if(params.get('paid') !== '1') return;
+  const sessionId = params.get('session_id');
+  if(!sessionId) return;
+
+  const verifyRes = await fetch('/api/verify-academy-payment?session_id=' + encodeURIComponent(sessionId));
+  const verify = await verifyRes.json();
+  if(!verify.valid) return;
+
+  document.getElementById('acLockBox').style.display = 'none';
+  const cal = document.getElementById('acCalendar');
+  cal.classList.add('unlocked');
+
+  const availRes = await fetch('/api/availability?category=academy');
+  const { slots } = await availRes.json();
+  const container = document.getElementById('acSlotsContainer');
+  container.innerHTML = '';
+  slots.forEach(s => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'slot' + (s.full ? ' booked' : '');
+    btn.textContent = `${new Date(s.slot_date + 'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'})} · ${s.slot_time}`;
+    if(s.full){ btn.disabled = true; }
+    else {
+      btn.addEventListener('click', async () => {
+        document.querySelectorAll('#acSlotsContainer .slot').forEach(el => el.classList.remove('selected'));
+        btn.classList.add('selected');
+        const bookRes = await fetch('/api/book-academy-slot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId, slot_id: s.id, name: verify.email, email: verify.email })
+        });
+        const bookData = await bookRes.json();
+        if(bookData.success){
+          btn.textContent += ' ✓ Booked';
+        }
+      });
+    }
+    container.appendChild(btn);
+  });
+}
+
+(function init(){
+  const hash = window.location.hash.replace('#','');
+  const page = hash.split('?')[0];
+  if(page === 'pt' || page === 'ac'){ showPage(page); } else { showPage('home'); }
+  if(page === 'ac'){ unlockAcademyIfPaid(); }
+  if(page === 'pt'){ unlockPtCalendarIfPaid(); }
+})();
+</script>
+
+</body>
+</html>
