@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Walks Academy — Admin</title>
+<style>
+  body{ background:#0b0a08; color:#ede6d6; font-family:system-ui,-apple-system,sans-serif; padding:32px; max-width:1000px; margin:0 auto; }
+  h1{ color:#e8c874; font-size:22px; margin-bottom:4px; }
+  p.sub{ opacity:0.6; margin-bottom:24px; font-size:14px; }
+  input{ background:#141210; border:1px solid #6b5730; color:#ede6d6; padding:10px 12px; border-radius:4px; font-size:14px; }
+  button{ background:#c9a24b; color:#0b0a08; border:none; padding:10px 18px; border-radius:4px; font-weight:600; cursor:pointer; font-size:14px; }
+  button:hover{ background:#e8c874; }
+  button:disabled{ opacity:0.4; cursor:not-allowed; }
+  table{ width:100%; border-collapse:collapse; margin-top:24px; font-size:13.5px; }
+  th, td{ text-align:left; padding:10px 12px; border-bottom:1px solid rgba(201,162,75,0.2); }
+  th{ color:#c9a24b; text-transform:uppercase; font-size:11px; letter-spacing:0.08em; }
+  tr.no_show_charged{ opacity:0.5; }
+  .status{ padding:3px 8px; border-radius:20px; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; }
+  .status.deposit_paid{ background:rgba(122,155,184,0.2); color:#7a9bb8; }
+  .status.no_show_charged{ background:rgba(168,50,50,0.2); color:#a83232; }
+  .status.paid_full{ background:rgba(107,183,107,0.2); color:#6bb76b; }
+  .status.awaiting_payment{ background:rgba(107,87,48,0.3); color:#bda772; }
+  #msg{ margin-top:16px; font-size:14px; }
+  #loginBox{ display:flex; gap:10px; align-items:center; }
+</style>
+</head>
+<body>
+
+<h1>All Walks Academy — Admin</h1>
+<p class="sub">Staff only. View bookings, and charge the remaining balance for confirmed no-shows.</p>
+
+<div id="loginBox">
+  <input type="password" id="passcode" placeholder="Admin passcode">
+  <button onclick="loadBookings()">Load Bookings</button>
+</div>
+
+<div id="msg"></div>
+
+<h2 style="color:#e8c874; font-size:17px; margin-top:36px;">Add a Booking Manually</h2>
+<p class="sub">For phone, walk-in, or cash bookings — no card is saved, so a no-show on these must be charged another way.</p>
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; max-width:640px; margin-top:12px;">
+  <input type="text" id="mbName" placeholder="Full name">
+  <input type="email" id="mbEmail" placeholder="Email">
+  <input type="tel" id="mbPhone" placeholder="Phone">
+  <select id="mbService"><option value="">Loading services…</option></select>
+  <select id="mbSlot"><option value="">No specific slot / choose later</option></select>
+  <select id="mbStatus">
+    <option value="">Default for this service</option>
+    <option value="deposit_paid">Deposit paid (in person)</option>
+    <option value="paid_full">Paid in full (in person)</option>
+    <option value="scheduled">Scheduled, not yet paid</option>
+  </select>
+</div>
+<button onclick="createManualBooking()" style="margin-top:14px;">Add Booking</button>
+<div id="mbMsg" style="margin-top:10px;"></div>
+
+<hr style="border-color:rgba(201,162,75,0.2); margin:36px 0;">
+
+<table id="bookingsTable" style="display:none;">
+  <thead>
+    <tr>
+      <th>Client</th><th>Service</th><th>Slot</th><th>Status</th><th>Deposit</th><th>Balance</th><th></th>
+    </tr>
+  </thead>
+  <tbody id="bookingsBody"></tbody>
+</table>
+
+<script>
+let PASSCODE = '';
+
+function currentPasscode(){
+  return document.getElementById('passcode').value;
+}
+
+async function loadServiceOptions(){
+  const select = document.getElementById('mbService');
+  try{
+    const res = await fetch('/api/services');
+    const { services } = await res.json();
+    select.innerHTML = '';
+    services.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.key;
+      opt.dataset.category = s.category;
+      opt.textContent = `${s.category} — ${s.label} (£${s.fee})`;
+      select.appendChild(opt);
+    });
+    select.addEventListener('change', loadSlotOptionsForSelectedService);
+    loadSlotOptionsForSelectedService();
+  } catch(err){
+    select.innerHTML = '<option value="">Could not load services</option>';
+  }
+}
+loadServiceOptions();
+
+async function loadSlotOptionsForSelectedService(){
+  const serviceSelect = document.getElementById('mbService');
+  const slotSelect = document.getElementById('mbSlot');
+  const category = serviceSelect.selectedOptions[0]?.dataset.category;
+  slotSelect.innerHTML = '<option value="">No specific slot / choose later</option>';
+  if(!category || category === 'academy') return;
+  try{
+    const res = await fetch('/api/availability?category=' + encodeURIComponent(category));
+    const { slots } = await res.json();
+    slots.filter(s => !s.full).forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = `${s.slot_date} · ${s.slot_time}`;
+      slotSelect.appendChild(opt);
+    });
+  } catch(err){ /* leave default option */ }
+}
+
+async function createManualBooking(){
+  const msg = document.getElementById('mbMsg');
+  const passcode = currentPasscode();
+  if(!passcode){ msg.textContent = 'Enter the admin passcode above first.'; return; }
+
+  const body = {
+    name: document.getElementById('mbName').value,
+    email: document.getElementById('mbEmail').value,
+    phone: document.getElementById('mbPhone').value,
+    service_key: document.getElementById('mbService').value,
+    slot_id: document.getElementById('mbSlot').value || null,
+    payment_status: document.getElementById('mbStatus').value || null
+  };
+  if(!body.name || !body.email || !body.service_key){
+    msg.textContent = 'Name, email and a service are required.'; return;
+  }
+
+  msg.textContent = 'Adding…';
+  try{
+    const res = await fetch('/api/admin-create-booking', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-passcode': passcode },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if(res.ok){
+      msg.textContent = 'Booking added.';
+      document.getElementById('mbName').value = '';
+      document.getElementById('mbEmail').value = '';
+      document.getElementById('mbPhone').value = '';
+      loadSlotOptionsForSelectedService();
+      loadBookings();
+    } else {
+      msg.textContent = data.error || 'Something went wrong.';
+    }
+  } catch(err){
+    msg.textContent = 'Could not reach the server.';
+  }
+}
+
+async function loadBookings(){
+  PASSCODE = currentPasscode();
+  const msg = document.getElementById('msg');
+  msg.textContent = 'Loading…';
+  try{
+    const res = await fetch('/api/admin-bookings', { headers: { 'x-admin-passcode': PASSCODE } });
+    const data = await res.json();
+    if(!res.ok){ msg.textContent = data.error || 'Failed to load.'; return; }
+    msg.textContent = '';
+    renderBookings(data.bookings);
