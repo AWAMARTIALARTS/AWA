@@ -38,17 +38,30 @@
 
 <div class="wrap">
 
-  <div class="page active" id="page-join">
-    <div class="eyebrow">AWA Solo Challenge</div>
-    <h1>Join the Challenge</h1>
-    <p style="margin:16px 0 30px; opacity:0.85;">£50/month for shadow boxing drills — movement, punch technique, head movement, bag work — plus fitness workouts, circuit training, and nutrition guidance. Submit video for assessment to progress through the AWA Strike Level syllabus.</p>
+  <div class="page" id="page-coming-soon">
+    <div class="eyebrow">All Walks Academy</div>
+    <h1>Coming Soon</h1>
+    <p style="margin:16px 0 30px; opacity:0.85;">Our memberships aren't open yet — check back soon, or head back to the main site to book Personal Training or the 8-Week Combat Fitness Transformation.</p>
+    <a href="index.html" class="btn">Back to All Walks Academy</a>
+  </div>
+
+  <div class="page" id="page-join">
+    <div class="eyebrow">All Walks Academy</div>
+    <h1>Join a Membership</h1>
     <div class="card">
       <div class="field"><label for="joinEmail">Email</label><input type="email" id="joinEmail" required></div>
       <div class="field"><label for="joinPassword">Choose a Password</label><input type="password" id="joinPassword" minlength="8" required></div>
+      <div class="field">
+        <label for="joinProduct">Which Membership?</label>
+        <select id="joinProduct">
+          <option value="solo_challenge">AWA Solo Challenge — £50/month (graded syllabus, video assessment, level progression)</option>
+          <option value="fitness">AWA Fitness Subscription — £25/month (gym sessions, bag work, general training content)</option>
+        </select>
+      </div>
       <button class="btn" id="joinBtn" style="width:100%;">Subscribe &amp; Join</button>
       <div class="msg" id="joinMsg"></div>
     </div>
-    <p class="backlink">Already a member? <a href="#login" onclick="showPage('login')">Log in</a></p>
+    <p class="backlink">Already a member? <a href="#login" onclick="showPage('login')">Log in</a> — you can add a second membership to the same account once logged in.</p>
   </div>
 
   <div class="page" id="page-login">
@@ -64,11 +77,11 @@
   </div>
 
   <div class="page" id="page-dashboard">
-    <div class="eyebrow">AWA Solo Challenge</div>
+    <div class="eyebrow">All Walks Academy</div>
     <h1>Your Academy</h1>
 
-    <div class="card" style="margin-top:24px;">
-      <div class="eyebrow">Your Progress</div>
+    <div class="card" id="soloProgressCard" style="margin-top:24px; display:none;">
+      <div class="eyebrow">AWA Solo Challenge — Your Progress</div>
       <h3 style="font-size:22px; margin:10px 0;">AWA Strike Level <span id="currentLevel">–</span></h3>
       <p style="opacity:0.85;">Submit a video of your current level's combinations for assessment. Once approved, you'll move up to the next level.</p>
       <div class="field" style="margin-top:18px;"><label for="videoUrl">Video Link (YouTube or Vimeo, unlisted is fine)</label><input type="text" id="videoUrl"></div>
@@ -77,16 +90,30 @@
       <div id="submissionHistory" style="margin-top:20px;"></div>
     </div>
 
-    <div class="topics-grid" style="margin-top:30px;">
-      <div class="topic-card" onclick="openTopic('stance-guard','Stance & Guard')"><h3>Stance &amp; Guard</h3></div>
-      <div class="topic-card" onclick="openTopic('movement','Movement')"><h3>Movement</h3></div>
-      <div class="topic-card" onclick="openTopic('punch-technique','Punch Technique')"><h3>Punch Technique</h3></div>
-      <div class="topic-card" onclick="openTopic('head-movement','Head Movement')"><h3>Head Movement</h3></div>
-      <div class="topic-card" onclick="openTopic('bag-work','Bag Work')"><h3>Bag Work</h3></div>
-      <div class="topic-card" onclick="openTopic('fitness-workouts','Fitness Workouts')"><h3>Fitness Workouts</h3></div>
-      <div class="topic-card" onclick="openTopic('circuit-training','Circuit Training')"><h3>Circuit Training</h3></div>
-      <div class="topic-card" onclick="openTopic('nutrition','Nutrition')"><h3>Nutrition</h3></div>
+    <div id="soloTopics" style="display:none;">
+      <div class="eyebrow" style="margin-top:30px; display:block;">AWA Solo Challenge Content</div>
+      <div class="topics-grid" style="margin-top:14px;">
+        <div class="topic-card" onclick="openTopic('stance-guard','Stance & Guard')"><h3>Stance &amp; Guard</h3></div>
+        <div class="topic-card" onclick="openTopic('movement','Movement')"><h3>Movement</h3></div>
+        <div class="topic-card" onclick="openTopic('punch-technique','Punch Technique')"><h3>Punch Technique</h3></div>
+        <div class="topic-card" onclick="openTopic('head-movement','Head Movement')"><h3>Head Movement</h3></div>
+      </div>
     </div>
+
+    <div id="fitnessTopics" style="display:none;">
+      <div class="eyebrow" style="margin-top:30px; display:block;">AWA Fitness Subscription Content</div>
+      <div class="topics-grid" style="margin-top:14px;">
+        <div class="topic-card" onclick="openTopic('bag-work','Bag Work')"><h3>Bag Work</h3></div>
+        <div class="topic-card" onclick="openTopic('fitness-workouts','Fitness Workouts')"><h3>Fitness Workouts</h3></div>
+        <div class="topic-card" onclick="openTopic('circuit-training','Circuit Training')"><h3>Circuit Training</h3></div>
+        <div class="topic-card" onclick="openTopic('nutrition','Nutrition')"><h3>Nutrition</h3></div>
+      </div>
+    </div>
+
+    <div class="card" id="addOtherMembership" style="margin-top:30px; display:none;">
+      <p style="opacity:0.85; margin:0;">Want the other membership too? <a href="#join" onclick="showPage('join')">Add it to your account</a>.</p>
+    </div>
+
     <p style="margin-top:30px;"><a href="#" onclick="logout(); return false;" class="backlink">Log out</a></p>
   </div>
 
@@ -103,13 +130,14 @@ function showPage(name){
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   window.scrollTo({top:0, behavior:'instant'});
-  if(name === 'dashboard') loadProgress();
+  if(name === 'dashboard') loadDashboard();
 }
 
 document.getElementById('joinBtn').addEventListener('click', async () => {
   const msg = document.getElementById('joinMsg');
   const email = document.getElementById('joinEmail').value;
   const password = document.getElementById('joinPassword').value;
+  const product = document.getElementById('joinProduct').value;
   if(!email || password.length < 8){
     msg.style.display = 'block'; msg.textContent = 'Enter a valid email and a password of at least 8 characters.';
     return;
@@ -117,7 +145,7 @@ document.getElementById('joinBtn').addEventListener('click', async () => {
   try{
     const res = await fetch('/api/member-signup', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password, product })
     });
     const data = await res.json();
     if(data.url){ window.location.href = data.url; }
@@ -149,14 +177,31 @@ async function logout(){
   showPage('login');
 }
 
-async function loadProgress(){
+async function loadDashboard(){
+  try{
+    const res = await fetch('/api/member-status');
+    if(res.status === 401){ showPage('login'); return; }
+    const status = await res.json();
+
+    document.getElementById('soloProgressCard').style.display = status.solo_challenge_active ? 'block' : 'none';
+    document.getElementById('soloTopics').style.display = status.solo_challenge_active ? 'block' : 'none';
+    document.getElementById('fitnessTopics').style.display = status.fitness_active ? 'block' : 'none';
+    document.getElementById('addOtherMembership').style.display =
+      (status.solo_challenge_active && status.fitness_active) ? 'none' : 'block';
+
+    if(status.solo_challenge_active){
+      document.getElementById('currentLevel').textContent = status.current_level;
+      loadSubmissionHistory();
+    }
+  } catch(err){ /* silent */ }
+}
+
+async function loadSubmissionHistory(){
   try{
     const res = await fetch('/api/member-submit-video');
-    if(res.status === 401){ showPage('login'); return; }
     const data = await res.json();
-    document.getElementById('currentLevel').textContent = data.current_level;
     const history = document.getElementById('submissionHistory');
-    if(!data.submissions.length){
+    if(!data.submissions || !data.submissions.length){
       history.innerHTML = '';
       return;
     }
@@ -184,7 +229,7 @@ document.getElementById('submitVideoBtn').addEventListener('click', async () => 
     if(data.success){
       msg.style.display='block'; msg.textContent = 'Submitted — you\'ll see the result here once it\'s reviewed.';
       document.getElementById('videoUrl').value = '';
-      loadProgress();
+      loadSubmissionHistory();
     } else {
       msg.style.display='block'; msg.textContent = data.error || 'Something went wrong.';
     }
@@ -235,19 +280,33 @@ async function openTopic(topic, label){
 }
 
 (function init(){
-  const hash = window.location.hash.replace('#','');
-  const page = hash.split('?')[0];
-  const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
+  const ADMIN_PREVIEW = localStorage.getItem('awa_admin_preview') === 'true';
+  fetch('/api/membership-status')
+    .then(res => res.json())
+    .then(data => {
+      if (!data.solo_challenge && !data.fitness_subscription && !ADMIN_PREVIEW) {
+        showPage('coming-soon');
+        return;
+      }
+      const hash = window.location.hash.replace('#','');
+      const page = hash.split('?')[0];
+      const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
 
-  if(page === 'login'){
-    showPage('login');
-    if(params.get('joined') === '1'){
-      const msg = document.getElementById('loginMsg');
-      msg.style.display = 'block';
-      msg.textContent = 'Payment received — log in below to access the academy.';
-    }
-  } else if(page === 'dashboard'){ showPage('dashboard'); }
-  else { showPage('join'); }
+      if(page === 'login'){
+        showPage('login');
+        if(params.get('joined') === '1'){
+          const msg = document.getElementById('loginMsg');
+          msg.style.display = 'block';
+          msg.textContent = 'Payment received — log in below to access the academy.';
+        }
+      } else if(page === 'dashboard'){ showPage('dashboard'); }
+      else { showPage('join'); }
+    })
+    .catch(() => {
+      // If the status check itself fails, default to Coming Soon rather than
+      // accidentally exposing signup
+      showPage('coming-soon');
+    });
 })();
 </script>
 
