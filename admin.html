@@ -3,162 +3,538 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>All Walks Academy — Admin</title>
+<title>Admin — All Walks Academy</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  body{ background:#0b0a08; color:#ede6d6; font-family:system-ui,-apple-system,sans-serif; padding:32px; max-width:1000px; margin:0 auto; }
-  h1{ color:#e8c874; font-size:22px; margin-bottom:4px; }
-  p.sub{ opacity:0.6; margin-bottom:24px; font-size:14px; }
-  input{ background:#141210; border:1px solid #6b5730; color:#ede6d6; padding:10px 12px; border-radius:4px; font-size:14px; }
-  button{ background:#c9a24b; color:#0b0a08; border:none; padding:10px 18px; border-radius:4px; font-weight:600; cursor:pointer; font-size:14px; }
-  button:hover{ background:#e8c874; }
-  button:disabled{ opacity:0.4; cursor:not-allowed; }
-  table{ width:100%; border-collapse:collapse; margin-top:24px; font-size:13.5px; }
-  th, td{ text-align:left; padding:10px 12px; border-bottom:1px solid rgba(201,162,75,0.2); }
-  th{ color:#c9a24b; text-transform:uppercase; font-size:11px; letter-spacing:0.08em; }
-  tr.no_show_charged{ opacity:0.5; }
-  .status{ padding:3px 8px; border-radius:20px; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; }
-  .status.deposit_paid{ background:rgba(122,155,184,0.2); color:#7a9bb8; }
-  .status.no_show_charged{ background:rgba(168,50,50,0.2); color:#a83232; }
-  .status.paid_full{ background:rgba(107,183,107,0.2); color:#6bb76b; }
-  .status.awaiting_payment{ background:rgba(107,87,48,0.3); color:#bda772; }
-  #msg{ margin-top:16px; font-size:14px; }
-  #loginBox{ display:flex; gap:10px; align-items:center; }
+  :root{
+    --black:#0b0a08; --black-2:#141210; --gold:#c9a24b; --gold-bright:#e8c874;
+    --parchment:#ede6d6; --line: rgba(201,162,75,0.25);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--black); color:var(--parchment); font-family:'Cormorant Garamond', serif; font-size:19px; line-height:1.6; }
+  h1,h2,h3{ font-family:'Oswald', sans-serif; text-transform:uppercase; letter-spacing:0.04em; color:var(--gold-bright); font-weight:600; }
+  .eyebrow{ font-family:'Inter', sans-serif; font-size:12px; letter-spacing:0.24em; text-transform:uppercase; color:var(--gold); font-weight:600; }
+  .wrap{ max-width:900px; margin:0 auto; padding:60px 24px; }
+  .btn{ font-family:'Inter', sans-serif; font-weight:600; font-size:14px; letter-spacing:0.04em; padding:12px 24px; border:none; cursor:pointer; border-radius:2px; background:var(--gold); color:var(--black); }
+  .btn:hover{ background:var(--gold-bright); }
+  .field{ margin-bottom:16px; }
+  label{ font-family:'Inter', sans-serif; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--gold); display:block; margin-bottom:6px; }
+  input, textarea, select{ width:100%; background:var(--black-2); border:1px solid var(--line); color:var(--parchment); padding:12px 14px; font-family:'Inter', sans-serif; font-size:15px; border-radius:2px; }
+  textarea{ min-height:120px; resize:vertical; }
+  .card{ border:1px solid var(--gold); padding:26px; margin-bottom:24px; background:linear-gradient(180deg, rgba(201,162,75,0.05), transparent); }
+  .page{ display:none; } .page.active{ display:block; }
+  .msg{ margin-top:14px; padding:12px 16px; border:1px solid var(--gold); font-family:'Inter', sans-serif; font-size:14px; display:none; }
+  .content-list-item{ border-bottom:1px solid var(--line); padding:14px 0; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  .tabs{ display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap; }
+  .tabs button{ font-family:'Inter', sans-serif; font-size:13px; padding:8px 14px; background:none; border:1px solid var(--line); color:var(--parchment); cursor:pointer; }
+  .tabs button.active{ border-color:var(--gold); color:var(--gold-bright); }
+  .danger{ color:#d97757; cursor:pointer; font-family:'Inter', sans-serif; font-size:13px; }
+  .private-text{ white-space:pre-line; opacity:0.9; }
 </style>
 </head>
 <body>
+<div class="wrap">
 
-<h1>All Walks Academy — Admin</h1>
-<p class="sub">Staff only. View bookings, and charge the remaining balance for confirmed no-shows.</p>
+  <div class="page active" id="page-gate">
+    <div class="eyebrow">Admin</div>
+    <h1>Enter Password</h1>
+    <div class="card" style="margin-top:24px; max-width:420px;">
+      <div class="field"><label for="gatePassword">Password</label><input type="password" id="gatePassword"></div>
+      <button class="btn" id="gateBtn" style="width:100%;">Enter</button>
+      <div class="msg" id="gateMsg"></div>
+    </div>
+  </div>
 
-<div id="loginBox">
-  <input type="password" id="passcode" placeholder="Admin passcode">
-  <button onclick="loadBookings()">Load Bookings</button>
+  <div class="page" id="page-admin">
+    <div class="eyebrow">Admin</div>
+    <h1>Academy Content &amp; Private Notes</h1>
+
+    <div class="tabs" style="margin-top:30px;">
+      <button class="active" onclick="showAdminTab('content')">Manage Content</button>
+      <button onclick="showAdminTab('calendar')">Manage Calendar</button>
+      <button onclick="showAdminTab('submissions')">Video Submissions</button>
+      <button onclick="showAdminTab('private')">Mission &amp; Syllabus (Private)</button>
+    </div>
+
+    <div id="tab-content">
+      <div class="card">
+        <h3 style="font-size:16px; margin-bottom:16px;">Add Content</h3>
+        <div class="field">
+          <label for="cTopic">Topic</label>
+          <select id="cTopic">
+            <option value="stance-guard">Stance & Guard</option>
+            <option value="movement">Movement</option>
+            <option value="punch-technique">Punch Technique</option>
+            <option value="head-movement">Head Movement</option>
+            <option value="bag-work">Bag Work</option>
+            <option value="fitness-workouts">Fitness Workouts</option>
+            <option value="circuit-training">Circuit Training</option>
+            <option value="nutrition">Nutrition</option>
+          </select>
+        </div>
+        <div class="field"><label for="cTitle">Title</label><input type="text" id="cTitle"></div>
+        <div class="field"><label for="cBody">Text</label><textarea id="cBody"></textarea></div>
+        <div class="field"><label for="cVideo">Video Link (YouTube or Vimeo, unlisted is fine — optional)</label><input type="text" id="cVideo"></div>
+        <button class="btn" id="addContentBtn">Add to Academy</button>
+        <div class="msg" id="contentMsg"></div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:16px; margin-bottom:16px;">Existing Content</h3>
+        <div class="field">
+          <label for="viewTopic">Filter by Topic</label>
+          <select id="viewTopic" onchange="loadContentList()">
+            <option value="">All Topics</option>
+            <option value="stance-guard">Stance & Guard</option>
+            <option value="movement">Movement</option>
+            <option value="punch-technique">Punch Technique</option>
+            <option value="head-movement">Head Movement</option>
+            <option value="bag-work">Bag Work</option>
+            <option value="fitness-workouts">Fitness Workouts</option>
+            <option value="circuit-training">Circuit Training</option>
+            <option value="nutrition">Nutrition</option>
+          </select>
+        </div>
+        <div id="contentList"></div>
+      </div>
+    </div>
+
+    <div id="tab-calendar" style="display:none;">
+      <div class="card">
+        <h3 style="font-size:16px; margin-bottom:16px;">Block / Unblock Time</h3>
+        <p style="font-family:'Inter',sans-serif; font-size:13.5px; opacity:0.7; margin-bottom:16px;">Blocks existing slots on a day (or a range of hours within a day) without deleting them — unblock any time to bring them back.</p>
+        <div class="field">
+          <label for="bCategory">Page</label>
+          <select id="bCategory">
+            <option value="">All Pages</option>
+            <option value="personal_training">Personal Training</option>
+            <option value="group_training">4-1 Small Group</option>
+            <option value="academy">Academy Training</option>
+          </select>
+        </div>
+        <div class="field"><label for="bDate">Date</label><input type="date" id="bDate"></div>
+        <div class="field">
+          <label><input type="checkbox" id="bWholeDay" checked onchange="toggleHourRange()" style="width:auto; margin-right:8px;">Block the whole day</label>
+        </div>
+        <div id="bHourRange" style="display:none;">
+          <div class="field"><label for="bStart">From</label><select id="bStart"></select></div>
+          <div class="field"><label for="bEnd">To</label><select id="bEnd"></select></div>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn" id="blockBtn">Block</button>
+          <button class="btn" id="unblockBtn" style="background:transparent; border:1px solid var(--line); color:var(--parchment);">Unblock</button>
+        </div>
+        <div class="msg" id="blockMsg"></div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:16px; margin-bottom:16px;">Add a Slot</h3>
+        <div class="field">
+          <label for="sCategory">Page</label>
+          <select id="sCategory">
+            <option value="personal_training">Personal Training</option>
+            <option value="group_training">4-1 Small Group</option>
+            <option value="academy">Academy Training</option>
+          </select>
+        </div>
+        <div class="field"><label for="sDate">Date</label><input type="date" id="sDate"></div>
+        <div class="field">
+          <label for="sTime">Time</label>
+          <select id="sTime"></select>
+        </div>
+        <div class="field"><label for="sCapacity">Capacity (leave as 1 unless it's the small group)</label><input type="number" id="sCapacity" value="1" min="1"></div>
+        <button class="btn" id="addSlotBtn">Add Slot</button>
+        <div class="msg" id="slotMsg"></div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:16px; margin-bottom:16px;">Upcoming Slots</h3>
+        <div class="field">
+          <label for="viewSlotCategory">Filter by Page</label>
+          <select id="viewSlotCategory" onchange="loadSlots()">
+            <option value="">All Pages</option>
+            <option value="personal_training">Personal Training</option>
+            <option value="group_training">4-1 Small Group</option>
+            <option value="academy">Academy Training</option>
+          </select>
+        </div>
+        <div id="slotsList"></div>
+      </div>
+    </div>
+
+    <div id="tab-submissions" style="display:none;">
+      <div class="card">
+        <h3 style="font-size:16px; margin-bottom:16px;">Pending Review</h3>
+        <div id="submissionsList"></div>
+      </div>
+    </div>
+
+    <div id="tab-private" style="display:none;">
+      <div class="card">
+        <h3 style="font-size:20px; margin-bottom:16px;">Cardio Training Guide (Private)</h3>
+        <p class="private-text">All cardio work is prescribed by heart rate zone, not pace. Wear a heart rate monitor (chest strap or wrist) for every session.
+
+Zone 1 (50-60% Max HR) — Recovery. Very light effort, full conversation.
+Zone 2 (60-70% Max HR) — Aerobic Base. Comfortable, sustainable, slightly quickened breath.
+Zone 3 (70-80% Max HR) — Tempo. Moderately hard, breathing noticeably harder.
+Zone 4 (80-90% Max HR) — Threshold. Hard, short sentences only.
+Zone 5 (90-100% Max HR) — Max Effort. All-out, unsustainable beyond short bursts.
+
+Zone 2 Base Run: 30-45 min continuous, Zone 2, no rest.
+Long Zone 2 Conditioning: 45-60 min continuous, Zone 2, no rest.
+Tempo Intervals: 4 x 8 min, Zone 3, 3 min Zone 1 between reps.
+Threshold Repeats: 5 x 5 min, Zone 4, 2 min Zone 1 between reps.
+HIIT Sprints: 10 x 30 sec, Zone 5, 90 sec Zone 1 between reps.
+
+Estimating max HR: 220 minus age is a rough guide only — use a lab or field test where possible, and let how you feel override the numbers.</p>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:20px; margin-bottom:16px;">Strength Development Principles (Private)</h3>
+        <p class="private-text">Conjugate Method (Louie Simmons / Westside Barbell): rotate Max Effort work (heavy singles/doubles, 90%+, rotated every 1-2 weeks to avoid staleness) with Dynamic Effort work (50-60% loads moved explosively). Builds raw strength and the speed to express it.
+
+Triphasic Training (Cal Dietz): dedicate blocks to eccentric, then isometric, then concentric emphasis within the same lifts. Slow controlled eccentrics build tendon strength and force absorption — directly protective for a fighter landing kicks or checking shots.
+
+Base lifts: squat, hinge, press, and pull patterns cycled through intensity/volume waves as the foundation everything else is built on.</p>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:20px; margin-bottom:16px;">Power Development Principles (Private)</h3>
+        <p class="private-text">Rate of Force Development: lighter loads moved maximally fast — trap bar jumps, medicine ball throws, simplified Olympic lift derivatives — trains the nervous system to produce force quickly, not just a lot of it.
+
+Post-Activation Potentiation (contrast training): pair a heavy strength movement with an explosive movement of a similar pattern (e.g. heavy trap bar deadlift into broad jumps). Use sparingly, in-season, as a peaking tool — fight-week or block-ending sessions — not a daily staple.</p>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:20px; margin-bottom:16px;">Explosiveness Development Principles (Private)</h3>
+        <p class="private-text">Plyometric progression: start low-amplitude (pogo hops, ankle bounces) before progressing to high-amplitude (broad jumps, depth jumps). Technique before intensity, always.
+
+Reactive strength: minimise ground contact time in jumps and bounds to train the stretch-shortening cycle — the same mechanism behind fast strikes and quick footwork off the back foot.</p>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:20px; margin-bottom:16px;">Movement Development Principles (Private)</h3>
+        <p class="private-text">Joint-by-Joint Approach (Mike Boyle): each joint alternates between needing mobility or stability. Bias unilateral work — split squats, single-leg RDLs, lateral lunges — since striking and grappling both happen from a staggered, often single-leg base.
+
+Movement-Based Training (Vern Gambetta): multi-directional footwork drills, rotational power work (cable rotations, med ball throws), and reactive agility build the general athleticism that specific technique sits on top of.
+
+Work Capacity & Aerobic Base (Joel Jamieson): a bigger aerobic engine (built through Zone 2 conditioning above) speeds recovery between rounds and between explosive efforts within a round — power output stays higher for longer.</p>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:20px; margin-bottom:16px;">Mission Statement</h3>
+        <p class="private-text">Martial arts is complex, and everyone develops at their own pace. Patience is the foundation every level is built on — come ready to work, ready to be patient with yourself, and ready to trust the process.
+
+This is the private reference copy. The same message appears publicly on the homepage and Combat Fitness page, worded for visitors.</p>
+      </div>
+      <div class="card">
+        <h3 style="font-size:20px; margin-bottom:16px;">8-Week Combat Fitness Transformation — Coach Syllabus</h3>
+        <p class="private-text">Full syllabus reference: see the AWA Combat Fitness Transformation Manual (Word document) for the complete AWA Strike Level 1-5 breakdown, weekly schedule, and grading criteria.
+
+Quick reference:
+Level 1 — Foundations: guard, range, blocking the 1,2,3, straight-shot returns (1,2 / 1,2,1 / 1,1,2 / 2,1,2)
+Level 2 — Head Movement & Lead Hand: 1,3 / 1,1 / 3,1 / slip,3 — rear hand added once balance holds
+Level 3 — Mid-Range Fighting: 1,2,3 / 1,2,3,4 / 2,3,2
+Level 4 — Range Transition: 1,1 / 1,1,2-move right / 3,2,roll / 2,3,2,roll / 1,slip 2,slip / 2,3
+Level 5 — Full integration, pads at competition pace, final grading
+
+8-week schedule: two levels introduced per fortnight, Week 8 reserved for Level 5 and grading.</p>
+      </div>
+    </div>
+  </div>
+
 </div>
-
-<div id="msg"></div>
-
-<h2 style="color:#e8c874; font-size:17px; margin-top:36px;">Add a Booking Manually</h2>
-<p class="sub">For phone, walk-in, or cash bookings — no card is saved, so a no-show on these must be charged another way.</p>
-<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; max-width:640px; margin-top:12px;">
-  <input type="text" id="mbName" placeholder="Full name">
-  <input type="email" id="mbEmail" placeholder="Email">
-  <input type="tel" id="mbPhone" placeholder="Phone">
-  <select id="mbService"><option value="">Loading services…</option></select>
-  <select id="mbSlot"><option value="">No specific slot / choose later</option></select>
-  <select id="mbStatus">
-    <option value="">Default for this service</option>
-    <option value="deposit_paid">Deposit paid (in person)</option>
-    <option value="paid_full">Paid in full (in person)</option>
-    <option value="scheduled">Scheduled, not yet paid</option>
-  </select>
-</div>
-<button onclick="createManualBooking()" style="margin-top:14px;">Add Booking</button>
-<div id="mbMsg" style="margin-top:10px;"></div>
-
-<hr style="border-color:rgba(201,162,75,0.2); margin:36px 0;">
-
-<table id="bookingsTable" style="display:none;">
-  <thead>
-    <tr>
-      <th>Client</th><th>Service</th><th>Slot</th><th>Status</th><th>Deposit</th><th>Balance</th><th></th>
-    </tr>
-  </thead>
-  <tbody id="bookingsBody"></tbody>
-</table>
 
 <script>
-let PASSCODE = '';
+let ADMIN_PASSWORD = '';
 
-function currentPasscode(){
-  return document.getElementById('passcode').value;
+function generateTimeOptions(){
+  const select = document.getElementById('sTime');
+  select.innerHTML = '';
+  let minutes = 6 * 60; // 6:00am
+  const endMinutes = 22 * 60; // 10:00pm cutoff — no slot starts after this
+  while (minutes <= endMinutes) {
+    let h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    const ampm = h >= 12 ? 'pm' : 'am';
+    let h12 = h % 12;
+    if (h12 === 0) h12 = 12;
+    const label = `${h12}:${m.toString().padStart(2, '0')}${ampm}`;
+    const opt = document.createElement('option');
+    opt.value = label;
+    opt.textContent = label;
+    select.appendChild(opt);
+    minutes += 75; // 1 hour 15 minutes — builds in a 15 min gap after a 60 min session
+  }
 }
+generateTimeOptions();
+populateHourRangeOptions();
 
-async function loadServiceOptions(){
-  const select = document.getElementById('mbService');
-  try{
-    const res = await fetch('/api/services');
-    const { services } = await res.json();
-    select.innerHTML = '';
-    services.forEach(s => {
+function populateHourRangeOptions(){
+  [document.getElementById('bStart'), document.getElementById('bEnd')].forEach(select => {
+    let minutes = 6 * 60;
+    const endMinutes = 22 * 60;
+    while (minutes <= endMinutes) {
+      let h = Math.floor(minutes / 60);
+      const m = minutes % 60;
+      const ampm = h >= 12 ? 'pm' : 'am';
+      let h12 = h % 12;
+      if (h12 === 0) h12 = 12;
+      const label = `${h12}:${m.toString().padStart(2, '0')}${ampm}`;
       const opt = document.createElement('option');
-      opt.value = s.key;
-      opt.dataset.category = s.category;
-      opt.textContent = `${s.category} — ${s.label} (£${s.fee})`;
+      opt.value = label;
+      opt.textContent = label;
       select.appendChild(opt);
-    });
-    select.addEventListener('change', loadSlotOptionsForSelectedService);
-    loadSlotOptionsForSelectedService();
-  } catch(err){
-    select.innerHTML = '<option value="">Could not load services</option>';
-  }
-}
-loadServiceOptions();
-
-async function loadSlotOptionsForSelectedService(){
-  const serviceSelect = document.getElementById('mbService');
-  const slotSelect = document.getElementById('mbSlot');
-  const category = serviceSelect.selectedOptions[0]?.dataset.category;
-  slotSelect.innerHTML = '<option value="">No specific slot / choose later</option>';
-  if(!category || category === 'academy') return;
-  try{
-    const res = await fetch('/api/availability?category=' + encodeURIComponent(category));
-    const { slots } = await res.json();
-    slots.filter(s => !s.full).forEach(s => {
-      const opt = document.createElement('option');
-      opt.value = s.id;
-      opt.textContent = `${s.slot_date} · ${s.slot_time}`;
-      slotSelect.appendChild(opt);
-    });
-  } catch(err){ /* leave default option */ }
+      minutes += 75;
+    }
+  });
 }
 
-async function createManualBooking(){
-  const msg = document.getElementById('mbMsg');
-  const passcode = currentPasscode();
-  if(!passcode){ msg.textContent = 'Enter the admin passcode above first.'; return; }
+function toggleHourRange(){
+  const wholeDay = document.getElementById('bWholeDay').checked;
+  document.getElementById('bHourRange').style.display = wholeDay ? 'none' : 'block';
+}
 
-  const body = {
-    name: document.getElementById('mbName').value,
-    email: document.getElementById('mbEmail').value,
-    phone: document.getElementById('mbPhone').value,
-    service_key: document.getElementById('mbService').value,
-    slot_id: document.getElementById('mbSlot').value || null,
-    payment_status: document.getElementById('mbStatus').value || null
-  };
-  if(!body.name || !body.email || !body.service_key){
-    msg.textContent = 'Name, email and a service are required.'; return;
+async function setBlocked(blocked){
+  const msg = document.getElementById('blockMsg');
+  const slot_date = document.getElementById('bDate').value;
+  const category = document.getElementById('bCategory').value;
+  const wholeDay = document.getElementById('bWholeDay').checked;
+  if(!slot_date){ msg.style.display='block'; msg.textContent = 'Pick a date first.'; return; }
+
+  const body = { slot_date, category: category || undefined, blocked };
+  if(!wholeDay){
+    body.start_time = document.getElementById('bStart').value;
+    body.end_time = document.getElementById('bEnd').value;
   }
 
-  msg.textContent = 'Adding…';
   try{
-    const res = await fetch('/api/admin-create-booking', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-passcode': passcode },
+    const res = await fetch('/api/admin-block-slots', {
+      method:'POST',
+      headers:{'Content-Type':'application/json', 'x-admin-password': ADMIN_PASSWORD},
       body: JSON.stringify(body)
     });
     const data = await res.json();
-    if(res.ok){
-      msg.textContent = 'Booking added.';
-      document.getElementById('mbName').value = '';
-      document.getElementById('mbEmail').value = '';
-      document.getElementById('mbPhone').value = '';
-      loadSlotOptionsForSelectedService();
-      loadBookings();
+    if(data.success){
+      msg.style.display='block';
+      msg.textContent = data.updated ? `${blocked ? 'Blocked' : 'Unblocked'} ${data.updated} slot(s).` : (data.message || 'No matching slots found.');
+      loadSlots();
     } else {
-      msg.textContent = data.error || 'Something went wrong.';
+      msg.style.display='block'; msg.textContent = data.error || 'Something went wrong.';
     }
   } catch(err){
-    msg.textContent = 'Could not reach the server.';
+    msg.style.display='block'; msg.textContent = 'Couldn\'t reach the server.';
   }
 }
 
-async function loadBookings(){
-  PASSCODE = currentPasscode();
-  const msg = document.getElementById('msg');
-  msg.textContent = 'Loading…';
+document.getElementById('blockBtn').addEventListener('click', () => setBlocked(true));
+document.getElementById('unblockBtn').addEventListener('click', () => setBlocked(false));
+
+document.getElementById('gateBtn').addEventListener('click', async () => {
+  const password = document.getElementById('gatePassword').value;
+  const msg = document.getElementById('gateMsg');
   try{
-    const res = await fetch('/api/admin-bookings', { headers: { 'x-admin-passcode': PASSCODE } });
+    const res = await fetch('/api/admin-verify', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ password })
+    });
     const data = await res.json();
-    if(!res.ok){ msg.textContent = data.error || 'Failed to load.'; return; }
-    msg.textContent = '';
-    renderBookings(data.bookings);
+    if(data.valid){
+      ADMIN_PASSWORD = password;
+      document.getElementById('page-gate').classList.remove('active');
+      document.getElementById('page-admin').classList.add('active');
+      loadContentList();
+    } else {
+      msg.style.display = 'block'; msg.textContent = 'Incorrect password.';
+    }
+  } catch(err){
+    msg.style.display = 'block'; msg.textContent = 'Couldn\'t reach the server.';
+  }
+});
+
+function showAdminTab(tab){
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-content').style.display = tab === 'content' ? 'block' : 'none';
+  document.getElementById('tab-calendar').style.display = tab === 'calendar' ? 'block' : 'none';
+  document.getElementById('tab-submissions').style.display = tab === 'submissions' ? 'block' : 'none';
+  document.getElementById('tab-private').style.display = tab === 'private' ? 'block' : 'none';
+  if(tab === 'submissions') loadSubmissions();
+  if(tab === 'calendar') loadSlots();
+}
+
+document.getElementById('addSlotBtn').addEventListener('click', async () => {
+  const msg = document.getElementById('slotMsg');
+  const category = document.getElementById('sCategory').value;
+  const slot_date = document.getElementById('sDate').value;
+  const slot_time = document.getElementById('sTime').value;
+  const capacity = parseInt(document.getElementById('sCapacity').value, 10) || 1;
+  if(!slot_date || !slot_time){
+    msg.style.display='block'; msg.textContent = 'Date and time are required.';
+    return;
+  }
+  try{
+    const res = await fetch('/api/admin-slots', {
+      method:'POST',
+      headers:{'Content-Type':'application/json', 'x-admin-password': ADMIN_PASSWORD},
+      body: JSON.stringify({ category, slot_date, slot_time, capacity })
+    });
+    const data = await res.json();
+    if(data.success){
+      msg.style.display='block'; msg.textContent = 'Slot added.';
+      document.getElementById('sDate').value = '';
+      loadSlots();
+    } else {
+      msg.style.display='block'; msg.textContent = data.error || 'Something went wrong.';
+    }
+  } catch(err){
+    msg.style.display='block'; msg.textContent = 'Couldn\'t reach the server.';
+  }
+});
+
+async function loadSlots(){
+  const category = document.getElementById('viewSlotCategory').value;
+  const container = document.getElementById('slotsList');
+  container.innerHTML = '<p style="opacity:0.6;">Loading…</p>';
+  try{
+    const url = '/api/admin-slots' + (category ? '?category=' + encodeURIComponent(category) : '');
+    const res = await fetch(url, { headers: { 'x-admin-password': ADMIN_PASSWORD } });
+    const data = await res.json();
+    if(!data.slots || !data.slots.length){
+      container.innerHTML = '<p style="opacity:0.6;">No slots yet.</p>';
+      return;
+    }
+    container.innerHTML = '';
+    data.slots.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'content-list-item';
+      const bookedNote = s.booked_count > 0 ? ` (${s.booked_count}/${s.capacity} booked)` : '';
+      const blockedTag = s.blocked ? ' <span style="color:#d97757; text-transform:uppercase; font-size:11px;">Blocked</span>' : '';
+      div.innerHTML = `<span><strong>${s.category}</strong> — ${s.slot_date} · ${s.slot_time}${bookedNote}${blockedTag}</span><span class="danger" onclick="deleteSlot('${s.id}')">Delete</span>`;
+      container.appendChild(div);
+    });
+  } catch(err){
+    container.innerHTML = '<p style="opacity:0.6;">Couldn\'t load slots.</p>';
+  }
+}
+
+async function deleteSlot(id){
+  if(!confirm('Delete this slot?')) return;
+  const res = await fetch('/api/admin-slots', {
+    method:'DELETE',
+    headers:{'Content-Type':'application/json', 'x-admin-password': ADMIN_PASSWORD},
+    body: JSON.stringify({ id })
+  });
+  const data = await res.json();
+  if(!data.success){ alert(data.error || 'Couldn\'t delete that slot.'); }
+  loadSlots();
+}
+
+async function loadSubmissions(){
+  const container = document.getElementById('submissionsList');
+  container.innerHTML = '<p style="opacity:0.6;">Loading…</p>';
+  try{
+    const res = await fetch('/api/admin-submissions?status=pending', { headers: { 'x-admin-password': ADMIN_PASSWORD } });
+    const data = await res.json();
+    if(!data.submissions || !data.submissions.length){
+      container.innerHTML = '<p style="opacity:0.6;">No submissions awaiting review.</p>';
+      return;
+    }
+    container.innerHTML = '';
+    data.submissions.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'content-list-item';
+      div.style.flexDirection = 'column';
+      div.style.alignItems = 'flex-start';
+      div.innerHTML = `
+        <div style="font-family:'Inter',sans-serif; font-size:14px; margin-bottom:8px;">
+          <strong>${s.members ? s.members.email : 'Unknown'}</strong> — Level ${s.level_submitted_for} — <a href="${s.video_url}" target="_blank" style="color:var(--gold);">View Video</a>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn" style="padding:8px 16px; font-size:12px;" onclick="reviewSubmission('${s.id}','approved')">Approve</button>
+          <button class="btn" style="padding:8px 16px; font-size:12px; background:transparent; border:1px solid var(--line); color:var(--parchment);" onclick="reviewSubmission('${s.id}','rejected')">Reject</button>
+        </div>`;
+      container.appendChild(div);
+    });
+  } catch(err){
+    container.innerHTML = '<p style="opacity:0.6;">Couldn\'t load submissions.</p>';
+  }
+}
+
+async function reviewSubmission(id, decision){
+  let admin_notes = '';
+  if(decision === 'rejected'){
+    admin_notes = prompt('Optional note for the member on what to work on:') || '';
+  }
+  await fetch('/api/admin-submissions', {
+    method:'POST',
+    headers:{'Content-Type':'application/json', 'x-admin-password': ADMIN_PASSWORD},
+    body: JSON.stringify({ id, decision, admin_notes })
+  });
+  loadSubmissions();
+}
+
+document.getElementById('addContentBtn').addEventListener('click', async () => {
+  const msg = document.getElementById('contentMsg');
+  const topic = document.getElementById('cTopic').value;
+  const title = document.getElementById('cTitle').value;
+  const body = document.getElementById('cBody').value;
+  const video_url = document.getElementById('cVideo').value;
+  if(!title){ msg.style.display='block'; msg.textContent = 'Title is required.'; return; }
+  try{
+    const res = await fetch('/api/admin-content', {
+      method:'POST',
+      headers:{'Content-Type':'application/json', 'x-admin-password': ADMIN_PASSWORD},
+      body: JSON.stringify({ topic, title, body, video_url })
+    });
+    const data = await res.json();
+    if(data.success){
+      msg.style.display='block'; msg.textContent = 'Added.';
+      document.getElementById('cTitle').value = '';
+      document.getElementById('cBody').value = '';
+      document.getElementById('cVideo').value = '';
+      loadContentList();
+    } else {
+      msg.style.display='block'; msg.textContent = data.error || 'Something went wrong.';
+    }
+  } catch(err){
+    msg.style.display='block'; msg.textContent = 'Couldn\'t reach the server.';
+  }
+});
+
+async function loadContentList(){
+  const topic = document.getElementById('viewTopic').value;
+  const container = document.getElementById('contentList');
+  container.innerHTML = '<p style="opacity:0.6;">Loading…</p>';
+  try{
+    const url = '/api/admin-content' + (topic ? '?topic=' + encodeURIComponent(topic) : '');
+    const res = await fetch(url, { headers: { 'x-admin-password': ADMIN_PASSWORD } });
+    const data = await res.json();
+    if(!data.content || !data.content.length){
+      container.innerHTML = '<p style="opacity:0.6;">No content yet.</p>';
+      return;
+    }
+    container.innerHTML = '';
+    data.content.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'content-list-item';
+      div.innerHTML = `<span><strong>${item.topic}</strong> — ${item.title}${item.video_url ? ' 🎬' : ''}</span><span class="danger" onclick="deleteContent('${item.id}')">Delete</span>`;
+      container.appendChild(div);
+    });
+  } catch(err){
+    container.innerHTML = '<p style="opacity:0.6;">Couldn\'t load content.</p>';
+  }
+}
+
+async function deleteContent(id){
+  if(!confirm('Delete this content?')) return;
+  await fetch('/api/admin-content', {
+    method:'DELETE',
+    headers:{'Content-Type':'application/json', 'x-admin-password': ADMIN_PASSWORD},
+    body: JSON.stringify({ id })
+  });
+  loadContentList();
+}
+</script>
+</body>
+</html>
