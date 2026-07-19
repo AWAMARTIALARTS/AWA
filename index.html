@@ -1,49 +1,1001 @@
-const supabase = require('../lib/supabase');
-const { getService } = require('../lib/services');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Walks Academy — Muay Thai for All</title>
+<meta name="description" content="All Walks Academy — 1-1 personal training and structured academy Muay Thai training. Book online.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --black:#0b0a08; --black-2:#141210; --gold:#c9a24b; --gold-bright:#e8c874;
+    --parchment:#ede6d6; --red:#8a2323; --red-bright:#a83232; --blue:#7a9bb8;
+    --bronze:#6b5730; --line: rgba(201,162,75,0.25); --green:#6bb76b; --green-bright:#8fd68f;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{ background:var(--black); color:var(--parchment); font-family:'Cormorant Garamond', serif; font-size:19px; line-height:1.6; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3,.display{ font-family:'Oswald', sans-serif; text-transform:uppercase; letter-spacing:0.04em; color:var(--gold-bright); font-weight:600; }
+  .eyebrow{ font-family:'Inter', sans-serif; font-size:12px; letter-spacing:0.28em; text-transform:uppercase; color:var(--gold); font-weight:600; }
+  a{color:inherit;} img{max-width:100%; display:block;}
+  .wrap{max-width:1120px; margin:0 auto; padding:0 24px;}
+  .rule{height:1px; background:linear-gradient(90deg, transparent, var(--gold), transparent); opacity:0.5; border:none;}
+  @media (prefers-reduced-motion: reduce){ *{animation:none !important; transition:none !important;} }
 
-function checkAdmin(req) {
-  return req.headers['x-admin-password'] === process.env.ADMIN_PASSWORD;
+  header{ position:sticky; top:0; z-index:50; background:rgba(11,10,8,0.94); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); }
+  nav{ display:flex; align-items:center; justify-content:space-between; padding:16px 24px; max-width:1120px; margin:0 auto; }
+  .brand{ display:flex; align-items:center; gap:10px; font-family:'Oswald', sans-serif; font-weight:700; font-size:18px; letter-spacing:0.08em; color:var(--gold-bright); text-decoration:none; cursor:pointer; }
+  .brand img{ width:36px; height:36px; border-radius:50%; }
+  .navlinks{display:flex; gap:10px; list-style:none;}
+  .navlinks button{ font-family:'Inter', sans-serif; font-size:13px; letter-spacing:0.06em; text-transform:uppercase; background:none; border:1px solid transparent; color:var(--parchment); opacity:0.85; cursor:pointer; padding:8px 14px; border-radius:2px; transition:all .2s; }
+  .navlinks button:hover{opacity:1; color:var(--gold-bright);}
+  .navlinks button.active{opacity:1; color:var(--gold-bright); border-color:var(--gold);}
+
+  section{padding:88px 24px;}
+  .section-head{text-align:center; max-width:640px; margin:0 auto 52px;}
+  .section-head h2{font-size:clamp(28px,4vw,40px); margin:10px 0 14px;}
+  .section-head p{opacity:0.8;}
+
+  .btn{ font-family:'Inter', sans-serif; font-weight:600; font-size:14px; letter-spacing:0.04em; padding:14px 30px; text-decoration:none; border:none; cursor:pointer; border-radius:2px; display:inline-block; transition:transform .15s, background .2s, color .2s; }
+  .btn:active{transform:scale(0.98);}
+  .btn-primary{background:var(--gold); color:var(--black);}
+  .btn-primary:hover{background:var(--gold-bright);}
+  .btn:disabled{opacity:0.4; cursor:not-allowed;}
+
+  .page{display:none;} .page.active{display:block;}
+
+  .hero{ position:relative; padding:96px 24px 80px; text-align:center; overflow:hidden; background: radial-gradient(ellipse at center 30%, rgba(201,162,75,0.10), transparent 60%), var(--black); }
+  .logo-mark{ width:220px; height:220px; border-radius:50%; margin:0 auto 32px; display:block; box-shadow:0 0 0 1px var(--gold), 0 20px 60px rgba(0,0,0,0.5); }
+  .hero h1{ font-size:clamp(38px, 7vw, 68px); line-height:1.02; margin-bottom:14px; }
+  .hero .sub{ font-family:'Cormorant Garamond', serif; font-style:italic; font-size:22px; opacity:0.85; margin-bottom:36px; }
+
+  .paths{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:1px; background:var(--line); max-width:1120px; margin:0 auto; border:1px solid var(--gold); }
+  .path-card.pt{border-right:1px solid var(--line);}
+  .path-card.ac{border-right:1px solid var(--line);}
+  .mission{ max-width:720px; margin:64px auto 0; text-align:center; padding:0 24px; }
+  .mission p{ font-family:'Cormorant Garamond', serif; font-style:italic; font-size:20px; opacity:0.9; margin-top:14px; }
+  .path-card{ background:var(--black); padding:48px 36px; text-align:left; }
+  .path-card .tag{ font-family:'Inter', sans-serif; font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:var(--gold); }
+  .path-card h3{ font-size:28px; margin:10px 0 12px; }
+  .path-card p{ opacity:0.8; margin-bottom:24px; font-size:17px;}
+  @media (max-width:760px){ .paths{grid-template-columns:1fr;} }
+
+  .pt-hero, .ac-hero{ padding:70px 24px 50px; text-align:center; background: radial-gradient(ellipse at center 20%, rgba(201,162,75,0.08), transparent 60%), var(--black-2); border-bottom:1px solid var(--line); }
+  .pt-hero h1, .ac-hero h1{ font-size:clamp(32px,6vw,52px); }
+
+  .price-cards-row{ display:flex; gap:24px; flex-wrap:wrap; justify-content:center; max-width:940px; margin:0 auto; }
+  .price-card{ border:1px solid var(--gold); padding:32px; text-align:center; flex:1; min-width:220px; background:linear-gradient(180deg, rgba(201,162,75,0.05), transparent); }
+  .price-card .tag{ font-family:'Inter', sans-serif; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); }
+  .price-card h3{font-size:20px; margin:8px 0;}
+  .price-card .price{ font-family:'Oswald', sans-serif; font-size:34px; color:var(--gold-bright); margin:8px 0;}
+  .price-card .price span{ font-size:14px; font-family:'Inter',sans-serif; color:var(--bronze); text-transform:none;}
+  .price-card p.note{ font-family:'Inter', sans-serif; font-size:13.5px; opacity:0.7; }
+
+  .group-note{ max-width:720px; margin:40px auto 0; border-left:3px solid var(--gold); padding:16px 22px; background:rgba(201,162,75,0.06); font-family:'Inter', sans-serif; font-size:14.5px; opacity:0.9; }
+
+  .cardio-table-wrap{ max-width:940px; margin:0 auto; overflow-x:auto; }
+  .cardio-table{ width:100%; border-collapse:collapse; font-family:'Inter', sans-serif; font-size:14.5px; }
+  .cardio-table th{ background:var(--black-2); color:var(--gold-bright); text-align:left; padding:12px 16px; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; border-bottom:1px solid var(--gold); }
+  .cardio-table td{ padding:12px 16px; border-bottom:1px solid var(--line); color:var(--parchment); }
+  .cardio-table tbody tr:nth-child(even){ background:rgba(201,162,75,0.04); }
+  .cardio-table td:first-child{ color:var(--gold-bright); font-weight:600; }
+  .group-note strong{color:var(--gold-bright);}
+
+  .avail{ max-width:940px; margin:56px auto 0; }
+  .avail-day{ margin-bottom:34px; }
+  .avail-day h3{ font-size:19px; margin-bottom:14px; text-align:center; }
+  .slots{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .slot{ font-family:'Inter', sans-serif; font-size:14px; padding:12px 20px; border:1px solid var(--gold); background:transparent; color:var(--parchment); cursor:pointer; border-radius:2px; transition:all .15s; }
+  .slot:hover{background:rgba(201,162,75,0.12);}
+  .slot.selected{background:var(--gold); color:var(--black); font-weight:600;}
+  .slot.booked{ border-color:var(--bronze); color:var(--bronze); text-decoration:line-through; cursor:not-allowed; background:none; }
+  .slot.locked{ border-color:var(--bronze); color:var(--bronze); opacity:0.5; cursor:not-allowed; background:none; }
+  .slot.confirmed{ background:var(--green); color:var(--black); font-weight:600; border-color:var(--green-bright); }
+  .avail-note{ text-align:center; font-family:'Inter', sans-serif; font-size:13px; opacity:0.55; margin-top:16px; }
+  .lock-banner{ text-align:center; font-family:'Inter', sans-serif; font-size:13.5px; color:var(--gold); opacity:0.85; margin-bottom:18px; }
+
+  .booking{max-width:720px; margin:64px auto 0;}
+  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+  .field{display:flex; flex-direction:column; gap:8px; margin-bottom:20px;}
+  .field.full{grid-column:1 / -1;}
+  label{ font-family:'Inter', sans-serif; font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--gold); }
+  input, select{ background:var(--black-2); border:1px solid var(--line); color:var(--parchment); padding:13px 14px; font-family:'Inter', sans-serif; font-size:15px; border-radius:2px; width:100%; }
+  input:focus, select:focus{outline:none; border-color:var(--gold);}
+  .checkfield{ display:flex; align-items:flex-start; gap:12px; margin:20px 0; }
+  .checkfield input{ width:auto; margin-top:4px; accent-color:var(--gold); }
+  .checkfield label{ text-transform:none; font-family:'Cormorant Garamond', serif; font-size:16px; color:var(--parchment); letter-spacing:normal; }
+  .checkfield label strong{color:var(--gold-bright);}
+
+  .summary{ margin-top:8px; border:1px solid var(--gold); padding:24px 26px; background:rgba(201,162,75,0.05); }
+  .summary-row{ display:flex; justify-content:space-between; font-family:'Inter', sans-serif; font-size:14px; padding:6px 0; }
+  .summary-row.total{ border-top:1px solid var(--line); margin-top:8px; padding-top:14px; font-size:16px; font-weight:600; color:var(--gold-bright); }
+  .summary-row .muted{opacity:0.6;}
+  .pay-methods{ font-family:'Inter', sans-serif; font-size:12.5px; opacity:0.6; text-align:center; margin-top:14px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .pay-methods .chip{ border:1px solid var(--line); padding:4px 10px; border-radius:20px; }
+  #ptMsg, #acMsg{ display:none; margin-top:18px; padding:16px 18px; border:1px solid var(--gold); font-family:'Inter', sans-serif; font-size:14px; }
+
+  .policy-note{ max-width:720px; margin:40px auto 0; border-left:3px solid var(--red-bright); padding:16px 22px; background:rgba(138,35,35,0.08); font-family:'Inter', sans-serif; font-size:14.5px; opacity:0.9; }
+  .policy-note strong{color:var(--gold-bright);}
+
+  .ac-info{ max-width:940px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); border:1px solid var(--line); }
+  .ac-info-item{ background:var(--black-2); padding:32px; }
+  .ac-info-item h3{font-size:17px; margin-bottom:10px;}
+  .ac-info-item p{font-size:16px; opacity:0.85; margin-bottom:6px;}
+  .ac-pricing{ max-width:820px; margin:56px auto 0; display:flex; gap:24px; flex-wrap:wrap; justify-content:center; }
+
+  .ac-journey{ max-width:720px; margin:0 auto 56px; text-align:center; }
+  .ac-journey h2{ font-size:clamp(24px,4vw,32px); margin-bottom:14px; }
+  .ac-journey p.note{ font-family:'Inter', sans-serif; font-size:14px; opacity:0.7; margin-top:10px; }
+
+  .lock-box{ max-width:720px; margin:56px auto 0; border:1px dashed var(--gold); padding:40px; text-align:center; }
+  .lock-box .icon{ font-size:34px; margin-bottom:14px; }
+  .lock-box h3{font-size:20px; margin-bottom:10px;}
+  .lock-box p{opacity:0.8; margin-bottom:20px;}
+
+  .ac-calendar{ max-width:720px; margin:56px auto 0; }
+  .cal-slots{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+
+  footer{padding:56px 24px 40px; text-align:center;}
+  footer .brand{ display:inline-flex; flex-direction:column; align-items:center; gap:8px; font-size:22px; margin-bottom:8px;}
+  footer .brand img{ width:64px; height:64px; border-radius:50%; }
+  footer p.copy{ font-family:'Inter', sans-serif; font-size:12.5px; opacity:0.5; margin-top:18px; }
+
+  @media (max-width:760px){
+    .form-grid{grid-template-columns:1fr;}
+    .ac-info{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <a class="brand" onclick="showPage('home')">ALL WALKS ACADEMY</a>
+    <ul class="navlinks">
+      <li><button onclick="showPage('home')" data-nav="home">Home</button></li>
+      <li><button onclick="showPage('pt')" data-nav="pt">Personal Training</button></li>
+      <li id="navAcademyTraining" style="display:none;"><button onclick="showPage('ac')" data-nav="ac">Academy Training</button></li>
+      <li><button onclick="showPage('cf')" data-nav="cf">Combat Fitness</button></li>
+      <li id="navAcademyLink" style="display:none;"><a href="academy.html" style="font-family:'Inter', sans-serif; font-size:13px; letter-spacing:0.06em; text-transform:uppercase; color:var(--gold-bright); opacity:0.85; padding:8px 14px; border:1px solid var(--gold); border-radius:2px; text-decoration:none;">Academy Login</a></li>
+    </ul>
+  </nav>
+</header>
+
+<div class="page active" id="page-home">
+  <section class="hero">
+    <div class="wrap">
+      <div class="eyebrow">Discipline · Respect · Growth</div>
+      <h1>Muay Thai<br>for All</h1>
+      <p class="sub">Every background. Every body.</p>
+      <div class="paths">
+        <div class="path-card pt">
+          <span class="tag">Path One</span>
+          <h3>Personal Training</h3>
+          <p>1-1 or 2-1 coaching, built around your weekend. Live availability, updated the moment someone books.</p>
+          <button class="btn btn-primary" onclick="showPage('pt')">Explore Personal Training</button>
+        </div>
+        <div class="path-card ac" id="pathAcademyTraining" style="display:none;">
+          <span class="tag">Path Two</span>
+          <h3>Academy Training</h3>
+          <p>Structured 4-week themed group training. Pay your session fee, then unlock the calendar to pick your class.</p>
+          <button class="btn btn-primary" onclick="showPage('ac')">Explore Academy Training</button>
+        </div>
+        <div class="path-card cf">
+          <span class="tag">Path Three</span>
+          <h3>Combat Fitness Transformation</h3>
+          <p>An 8-week strength & conditioning and striking program, graded through the AWA Strike Level system.</p>
+          <button class="btn btn-primary" onclick="showPage('cf')">Explore Combat Fitness</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mission">
+      <div class="eyebrow">Our Mission</div>
+      <p>Martial arts is complex, and everyone develops at their own pace. Patience is the foundation every level is built on — come ready to work, ready to be patient with yourself, and ready to trust the process.</p>
+    </div>
+  </section>
+</div>
+
+<div class="page" id="page-pt">
+  <section class="pt-hero">
+    <div class="wrap">
+      <div class="eyebrow">Path One</div>
+      <h1>Personal Training</h1>
+      <p class="sub" style="font-family:'Cormorant Garamond',serif; font-style:italic; opacity:0.85; margin-top:10px;">1-1, 2-1, Small Group, 4-Week Block sessions</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">AWA Training Prices</div>
+        <h2>Personal Training Pricing</h2>
+        <p>All services other than the small group sessions require a 50% deposit to secure your slot, then the other 50% is charged at your session.</p>
+      </div>
+
+      <div class="price-cards-row">
+        <div class="price-card">
+          <span class="tag">1-to-1</span>
+          <h3>Solo Coaching</h3>
+          <div class="price">£50<span> / session</span></div>
+          <p class="note">One-on-one, fully personalised</p>
+        </div>
+        <div class="price-card">
+          <span class="tag">2-to-1</span>
+          <h3>Partner Coaching</h3>
+          <div class="price">£60<span> / session</span></div>
+          <p class="note">Train with a friend, split the energy</p>
+        </div>
+        <div class="price-card">
+          <span class="tag">4-Week Block</span>
+          <h3>4 Sessions — 1 Per Week</h3>
+          <div class="price">£180<span> total</span></div>
+          <p class="note">£90 (50%) now, £90 due at your first session</p>
+        </div>
+        <div class="price-card">
+          <span class="tag">Small Group</span>
+          <h3>4-1 Small Group</h3>
+          <div class="price">£25<span> / person</span></div>
+          <p class="note">Full amount charged at booking</p>
+        </div>
+      </div>
+
+      <div class="group-note">
+        <strong>Small groups:</strong> organise your group of 4 amongst yourselves, or request to be put in a group and I'll find the others. The sessions are fixed for 4 weeks and are locked in once everyone has signed up and paid.
+      </div>
+
+      <hr class="rule" style="max-width:400px; margin:60px auto;">
+
+      <div class="section-head" style="margin-bottom:24px;">
+        <div class="eyebrow">Live Availability</div>
+        <h2 style="font-size:24px;">View Available Times</h2>
+        <p>Session times are visible now. Slots highlight once a booking is confirmed and paid.</p>
+      </div>
+
+      <div class="avail" id="ptPreviewCalendar">
+        <div class="lock-banner">🔒 Pay below to unlock and select your session</div>
+        <div id="ptPreviewSlots"><p style="text-align:center; font-family:'Inter',sans-serif; opacity:0.6;">Loading availability…</p></div>
+      </div>
+
+      <hr class="rule" style="max-width:400px; margin:60px auto;">
+
+      <div class="section-head" style="margin-bottom:24px;">
+        <div class="eyebrow">4-1 Small Group</div>
+        <h2 style="font-size:24px;">Join a Group Session</h2>
+        <p>Click an open session to join it — you'll pay your £25 immediately to lock your spot.</p>
+      </div>
+      <div class="avail" id="groupAvailability">
+        <div id="groupSlotsContainer"><p style="text-align:center; font-family:'Inter',sans-serif; opacity:0.6;">Loading availability…</p></div>
+        <form id="groupForm" style="max-width:480px; margin:24px auto 0; display:none;">
+          <div class="form-grid">
+            <div class="field full"><label for="groupName">Full Name</label><input type="text" id="groupName" required></div>
+            <div class="field full"><label for="groupEmail">Email</label><input type="email" id="groupEmail" required></div>
+            <div class="field full"><label for="groupPhone">Phone</label><input type="tel" id="groupPhone" required></div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;" id="groupSubmitBtn">Pay £25 &amp; Join This Session</button>
+          <div id="groupMsg"></div>
+        </form>
+      </div>
+
+      <hr class="rule" style="max-width:400px; margin:60px auto;">
+
+      <div class="section-head" style="margin-bottom:24px;">
+        <div class="eyebrow">1-1, 2-1 &amp; 4-Week Block</div>
+        <h2 style="font-size:26px;">Pay Your Deposit to Unlock the Calendar</h2>
+      </div>
+
+      <form class="booking" id="ptForm">
+        <div class="form-grid">
+          <div class="field"><label for="ptName">Full Name</label><input type="text" id="ptName" required></div>
+          <div class="field"><label for="ptEmail">Email</label><input type="email" id="ptEmail" required></div>
+          <div class="field"><label for="ptPhone">Phone</label><input type="tel" id="ptPhone" required></div>
+          <div class="field">
+            <label for="ptType">Session Type</label>
+            <select id="ptType" required>
+              <option value="" disabled selected>Loading options…</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="summary" id="ptSummary" style="display:none;">
+          <div class="summary-row"><span class="muted">Full price</span><span id="ptFee">£0</span></div>
+          <div class="summary-row"><span class="muted">Due at first lesson</span><span id="ptBalance">£0</span></div>
+          <div class="summary-row total"><span>Deposit due now (50%, non-refundable)</span><span id="ptDeposit">£0</span></div>
+        </div>
+
+        <div class="checkfield">
+          <input type="checkbox" id="ptNoShow" required>
+          <label for="ptNoShow"><strong>No-show policy:</strong> I understand that missing a booked session without notice is treated as a no-show, and the full 100% session fee is accepted as chargeable and will be taken from my account for no-shows.</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;" id="ptSubmitBtn">Pay Deposit &amp; Unlock Calendar</button>
+        <div class="pay-methods"><span class="chip">Card</span><span class="chip">Apple Pay</span><span class="chip">Pay by Bank</span></div>
+        <div id="ptMsg"></div>
+      </form>
+
+      <div class="avail" id="ptCalendar" style="display:none;">
+        <div class="section-head" style="margin-bottom:24px;">
+          <div class="eyebrow">Booking Unlocked</div>
+          <h2 style="font-size:24px;" id="ptCalendarTitle">Choose Your Session</h2>
+        </div>
+        <div id="ptCalendarSlots"></div>
+        <div id="ptCalendarMsg" style="text-align:center; margin-top:16px; font-family:'Inter',sans-serif;"></div>
+      </div>
+
+      <div class="policy-note"><strong>Deposit policy:</strong> the 50% deposit is non-refundable and secures your personal training booking. The remaining 50% balance is paid directly at your first lesson. Cards are securely saved by Stripe for no-show billing. 4-1 group sessions are charged in full at booking. Session times are visible before booking, but a slot is only confirmed and highlighted once the deposit is received.</div>
+    </div>
+  </section>
+</div>
+
+<div class="page" id="page-ac">
+  <section class="ac-hero">
+    <div class="wrap">
+      <div class="eyebrow">Path Two</div>
+      <h1>Self Defence Academy Training</h1>
+      <p class="sub" style="font-family:'Cormorant Garamond',serif; font-style:italic; opacity:0.85; margin-top:10px;">Structured 4-week combat training</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="ac-journey">
+        <div class="eyebrow">This Month's Focus</div>
+        <h2>Develop Your Self Defence With 4 Weeks Training</h2>
+        <p class="note">Paying the monthly fee will allow you 2 sessions a week for 4 weeks.</p>
+      </div>
+
+      <div class="ac-info">
+        <div class="ac-info-item"><h3>Session Times</h3><p>Tuesdays, 7:00pm – 8:00pm</p><p>Thursdays, 7:00pm – 8:00pm</p></div>
+        <div class="ac-info-item"><h3>Location</h3><p id="acLocationText">Confirm via text or WhatsApp, then my mobile number</p></div>
+      </div>
+
+      <div class="section-head" style="margin-top:56px;">
+        <div class="eyebrow">Live Availability</div>
+        <h2 style="font-size:24px;">View Class Times</h2>
+        <p>Session times are visible now. They highlight green once your payment unlocks booking.</p>
+      </div>
+
+      <div class="avail" id="acPreviewCalendar">
+        <div class="lock-banner">🔒 Pay below to unlock and confirm your session</div>
+        <div id="acPreviewSlots"><p style="text-align:center; font-family:'Inter',sans-serif; opacity:0.6;">Loading availability…</p></div>
+      </div>
+
+      <div class="ac-pricing" style="margin-top:56px;">
+        <div class="price-card"><span class="tag">Structured Programme</span><h3>4-Week Membership</h3><div class="price">£50<span> / month</span></div><p class="note">Full access to the themed 4-week block</p></div>
+        <div class="price-card"><span class="tag">Drop-In</span><h3>Pay As You Go</h3><div class="price">£10<span> / session</span></div><p class="note">No commitment, pay per class</p></div>
+      </div>
+
+      <div class="lock-box" id="acLockBox">
+        <div class="icon">🔒</div>
+        <h3>Booking Is Locked</h3>
+        <p>AWA Self-Defence &amp; Academy sessions are booked after payment. Pay the full session fee below to unlock the live calendar and choose your class time.</p>
+        <div class="form-grid" style="text-align:left; max-width:480px; margin:0 auto 20px;">
+          <div class="field full"><label for="acEmail">Email</label><input type="email" id="acEmail" required></div>
+          <div class="field full">
+            <label for="acPlan">Choose Your Option</label>
+            <select id="acPlan" required>
+              <option value="" disabled selected>Loading options…</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="acPayBtn">Pay Full Fee &amp; Unlock Booking</button>
+        <div class="pay-methods"><span class="chip">Card</span><span class="chip">Apple Pay</span><span class="chip">Pay by Bank</span></div>
+        <div id="acMsg"></div>
+      </div>
+
+      <div class="ac-calendar" id="acCalendar" style="display:none;">
+        <div class="section-head" style="margin-bottom:24px;"><div class="eyebrow">Booking Unlocked</div><h2 style="font-size:26px;">Choose Your Session</h2></div>
+        <div class="cal-slots" id="acSlotsContainer"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="page" id="page-cf">
+  <section class="pt-hero">
+    <div class="wrap">
+      <div class="eyebrow">Path Three</div>
+      <h1>Combat Fitness Transformation</h1>
+      <p class="sub" style="font-family:'Cormorant Garamond',serif; font-style:italic; opacity:0.85; margin-top:10px;">8-week strength & conditioning + striking program, graded 1–5</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">Twice Weekly · Zone 2 S&amp;C · AWA Strike Level Grading</div>
+        <h2>Choose Your Block</h2>
+        <p>Both options cover the full 8-week syllabus and grading — pick the payment style that suits you.</p>
+      </div>
+
+      <div class="price-cards-row">
+        <div class="price-card">
+          <span class="tag">4-Week Block</span>
+          <h3>8 Sessions</h3>
+          <div class="price">£280<span> total</span></div>
+          <p class="note">£35 per session</p>
+        </div>
+        <div class="price-card">
+          <span class="tag">Full 8-Week Program</span>
+          <h3>16 Sessions</h3>
+          <div class="price">£480<span> total</span></div>
+          <p class="note">£30 per session — better value for committing the full block</p>
+        </div>
+      </div>
+
+      <div class="mission" style="margin-top:56px;">
+        <p>"Martial arts is complex, and everyone develops at their own pace. Patience is the foundation every level is built on."</p>
+      </div>
+
+      <hr class="rule" style="max-width:400px; margin:60px auto;">
+
+      <div class="section-head" style="margin-bottom:24px;">
+        <div class="eyebrow">Full Payment Secures Your Spot</div>
+        <h2 style="font-size:26px;">Book Your Block</h2>
+      </div>
+
+      <form class="booking" id="cfForm">
+        <div class="form-grid">
+          <div class="field"><label for="cfName">Full Name</label><input type="text" id="cfName" required></div>
+          <div class="field"><label for="cfEmail">Email</label><input type="email" id="cfEmail" required></div>
+          <div class="field"><label for="cfPhone">Phone</label><input type="tel" id="cfPhone" required></div>
+          <div class="field">
+            <label for="cfType">Block</label>
+            <select id="cfType" required>
+              <option value="" disabled selected>Loading options…</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;" id="cfSubmitBtn">Pay &amp; Reserve Your Spot</button>
+        <div class="pay-methods"><span class="chip">Card</span><span class="chip">Apple Pay</span><span class="chip">Pay by Bank</span></div>
+        <div id="cfMsg"></div>
+      </form>
+
+      <div class="policy-note"><strong>Payment policy:</strong> full payment secures your place in the block. Sessions run twice weekly, Zone 2 conditioning and strength paired with a structured striking syllabus, culminating in your AWA Strike Level assessment.</div>
+
+      <div id="soloChallengeTeaser" style="display:none;">
+        <hr class="rule" style="max-width:400px; margin:60px auto;">
+
+        <div class="section-head" style="margin-bottom:24px;">
+          <div class="eyebrow">AWA Solo Challenge</div>
+          <h2 style="font-size:26px;">Train Solo, Get Graded</h2>
+          <p>£50/month for shadow boxing drills, bag work, fitness workouts, and circuit training — submit video for assessment and progress through the AWA Strike Level syllabus from anywhere.</p>
+        </div>
+        <div style="text-align:center;">
+          <a href="academy.html" class="btn btn-primary">Join the Academy</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="brand">ALL WALKS ACADEMY</div>
+    <div class="eyebrow">Discipline · Respect · Growth</div>
+    <hr class="rule" style="max-width:200px; margin:20px auto;">
+    <p class="copy">© <span id="year"></span> All Walks Academy. All rights reserved.</p>
+    <p class="copy" style="margin-top:6px;"><a href="#" onclick="toggleAdminPreview(); return false;" id="previewToggleLink" style="opacity:0.4; text-decoration:underline;">Admin Preview</a></p>
+  </div>
+</footer>
+
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.navlinks button').forEach(b => b.classList.toggle('active', b.dataset.nav === name));
+  window.scrollTo({top:0, behavior:'instant'});
 }
 
-module.exports = async (req, res) => {
-  if (!checkAdmin(req)) return res.status(401).json({ error: 'Incorrect admin password.' });
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+function formatDateLabel(dateStr){
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric' });
+}
 
-  const { name, email, phone, service_type, slot_id } = req.body || {};
-  if (!name || !email || !service_type) {
-    return res.status(400).json({ error: 'Name, email, and service are required.' });
-  }
-
-  const priceInfo = await getService(service_type);
-  if (!priceInfo) return res.status(400).json({ error: 'Unknown service.' });
-
-  // If a slot was chosen, confirm it has room and reserve it
-  if (slot_id) {
-    const { data: slot, error: slotErr } = await supabase.from('slots').select('*').eq('id', slot_id).single();
-    if (slotErr || !slot) return res.status(404).json({ error: 'Slot not found.' });
-    if (slot.booked_count >= slot.capacity) {
-      return res.status(409).json({ error: 'That slot is already full.' });
+async function loadPreviewCalendar(categories, containerId){
+  const container = document.getElementById(containerId);
+  try{
+    let allSlots = [];
+    for(const cat of categories){
+      const res = await fetch('/api/availability?category=' + encodeURIComponent(cat));
+      const { slots } = await res.json();
+      allSlots = allSlots.concat(slots.map(s => ({...s, category: cat})));
     }
-    await supabase.from('slots').update({ booked_count: slot.booked_count + 1 }).eq('id', slot_id);
+    if(!allSlots.length){
+      container.innerHTML = '<p style="text-align:center; font-family:\'Inter\',sans-serif; opacity:0.6;">No sessions scheduled right now — check back soon.</p>';
+      return;
+    }
+    const byDate = {};
+    allSlots.forEach(s => { (byDate[s.slot_date] = byDate[s.slot_date] || []).push(s); });
+    container.innerHTML = '';
+    Object.keys(byDate).sort().forEach(date => {
+      const dayWrap = document.createElement('div');
+      dayWrap.className = 'avail-day';
+      dayWrap.innerHTML = `<h3>${formatDateLabel(date)}</h3><div class="slots"></div>`;
+      const slotsEl = dayWrap.querySelector('.slots');
+      byDate[date].forEach(s => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'slot locked';
+        btn.disabled = true;
+        btn.textContent = s.slot_time + (s.full ? ' (Full)' : '');
+        slotsEl.appendChild(btn);
+      });
+      container.appendChild(dayWrap);
+    });
+  } catch(err){
+    container.innerHTML = '<p style="text-align:center; font-family:\'Inter\',sans-serif; opacity:0.6;">Couldn\'t load availability. Please refresh.</p>';
   }
+}
 
-  const { data, error } = await supabase
-    .from('bookings')
-    .insert({
-      slot_id: slot_id || null,
-      customer_name: name,
-      customer_email: email,
-      customer_phone: phone || null,
-      service_type,
-      fee_total: priceInfo.fee,
-      deposit_amount: null,
-      balance_amount: 0,
-      payment_status: 'paid_manual',
-      stripe_checkout_session_id: null,
-    })
-    .select()
-    .single();
+let PT_PRICES = {};
 
-  if (error) return res.status(500).json({ error: error.message });
-  res.status(200).json({ success: true, booking: data });
-};
+async function loadPtServiceOptions(){
+  const select = document.getElementById('ptType');
+  try{
+    const res = await fetch('/api/services?category=personal_training');
+    const { services } = await res.json();
+    select.innerHTML = '<option value="" disabled selected>Choose an option</option>';
+    services.forEach(s => {
+      PT_PRICES[s.key] = { label: s.label, fee: s.fee, mode: s.mode };
+      const opt = document.createElement('option');
+      opt.value = s.key;
+      opt.textContent = `${s.label} — £${s.fee}`;
+      select.appendChild(opt);
+    });
+  } catch(err){
+    select.innerHTML = '<option value="" disabled selected>Couldn\'t load options — please refresh</option>';
+  }
+}
+loadPtServiceOptions();
+loadPreviewCalendar(['personal_training', 'group_training'], 'ptPreviewSlots');
+
+let selectedGroupSlotId = null;
+
+async function loadGroupAvailability(){
+  const container = document.getElementById('groupSlotsContainer');
+  try{
+    const res = await fetch('/api/availability?category=group_training');
+    const { slots } = await res.json();
+    if(!slots.length){
+      container.innerHTML = '<p style="text-align:center; font-family:\'Inter\',sans-serif; opacity:0.6;">No group sessions are open right now — check back soon.</p>';
+      return;
+    }
+    container.innerHTML = '';
+    const slotsEl = document.createElement('div');
+    slotsEl.className = 'slots';
+    slots.forEach(s => {
+      const label = formatDateLabel(s.slot_date);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'slot' + (s.full ? ' booked' : '');
+      btn.textContent = `${label} · ${s.slot_time} (${s.spots_left}/${s.capacity} spots left)`;
+      if(s.full){ btn.disabled = true; btn.title = 'Full'; }
+      else {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#groupSlotsContainer .slot').forEach(el => el.classList.remove('selected'));
+          btn.classList.add('selected');
+          selectedGroupSlotId = s.id;
+          document.getElementById('groupForm').style.display = 'block';
+        });
+      }
+      slotsEl.appendChild(btn);
+    });
+    container.appendChild(slotsEl);
+  } catch(err){
+    container.innerHTML = '<p style="text-align:center; font-family:\'Inter\',sans-serif; opacity:0.6;">Couldn\'t load live availability. Please refresh.</p>';
+  }
+}
+loadGroupAvailability();
+
+document.getElementById('groupForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const msg = document.getElementById('groupMsg');
+  const btn = document.getElementById('groupSubmitBtn');
+  if(!selectedGroupSlotId) return;
+  btn.disabled = true; btn.textContent = 'Redirecting to payment…';
+  try{
+    const res = await fetch('/api/create-pt-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_type: 'fourtoone',
+        slot_id: selectedGroupSlotId,
+        name: document.getElementById('groupName').value,
+        email: document.getElementById('groupEmail').value,
+        phone: document.getElementById('groupPhone').value
+      })
+    });
+    const data = await res.json();
+    if(data.url){ window.location.href = data.url; }
+    else {
+      msg.style.display = 'block'; msg.innerHTML = data.error || 'Something went wrong.';
+      btn.disabled = false; btn.textContent = 'Pay £25 & Join This Session';
+    }
+  } catch(err){
+    msg.style.display = 'block';
+    msg.innerHTML = 'Couldn\'t reach the booking service — please try again shortly.';
+    btn.disabled = false; btn.textContent = 'Pay £25 & Join This Session';
+  }
+});
+
+const ptType = document.getElementById('ptType');
+const ptSummary = document.getElementById('ptSummary');
+function updatePtSummary(){
+  const key = ptType.value;
+  if(!key){ ptSummary.style.display = 'none'; return; }
+  const p = PT_PRICES[key];
+  const deposit = (p.fee / 2).toFixed(2).replace(/\.00$/, '');
+  const balance = (p.fee - p.fee/2).toFixed(2).replace(/\.00$/, '');
+  document.getElementById('ptFee').textContent = '£' + p.fee;
+  document.getElementById('ptBalance').textContent = '£' + balance;
+  document.getElementById('ptDeposit').textContent = '£' + deposit;
+  ptSummary.style.display = 'block';
+}
+ptType.addEventListener('change', updatePtSummary);
+
+document.getElementById('ptForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const msg = document.getElementById('ptMsg');
+  const btn = document.getElementById('ptSubmitBtn');
+  const key = ptType.value;
+  if(!key) return;
+  btn.disabled = true; btn.textContent = 'Redirecting to payment…';
+  try{
+    const res = await fetch('/api/create-pt-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_type: key,
+        name: document.getElementById('ptName').value,
+        email: document.getElementById('ptEmail').value,
+        phone: document.getElementById('ptPhone').value
+      })
+    });
+    const data = await res.json();
+    if(data.url){
+      window.location.href = data.url;
+    } else {
+      msg.style.display = 'block';
+      msg.innerHTML = data.error || 'Something went wrong — please try again.';
+      btn.disabled = false; btn.textContent = 'Pay Deposit & Unlock Calendar';
+    }
+  } catch(err){
+    msg.style.display = 'block';
+    msg.innerHTML = 'Couldn\'t reach the booking service — please try again shortly.';
+    btn.disabled = false; btn.textContent = 'Pay Deposit & Unlock Calendar';
+  }
+});
+
+async function unlockPtCalendarIfPaid(){
+  const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
+  if(params.get('paid') !== '1') return;
+  const sessionId = params.get('session_id');
+  const serviceType = params.get('type');
+  if(!sessionId) return;
+
+  const verifyRes = await fetch('/api/verify-pt-payment?session_id=' + encodeURIComponent(sessionId));
+  const verify = await verifyRes.json();
+  if(!verify.valid) return;
+
+  document.getElementById('ptPreviewCalendar').style.display = 'none';
+  document.getElementById('ptCalendar').style.display = 'block';
+  const availRes = await fetch('/api/availability?category=personal_training');
+  const { slots } = await availRes.json();
+
+  if(serviceType === 'block4'){
+    document.getElementById('ptCalendarTitle').textContent = 'Choose 4 Sessions — One Per Week';
+    renderBlockPicker(slots, verify.booking_id);
+  } else {
+    document.getElementById('ptCalendarTitle').textContent = 'Choose Your Session Time';
+    renderSinglePicker(slots, verify.booking_id);
+  }
+}
+
+function renderSinglePicker(slots, bookingId){
+  const container = document.getElementById('ptCalendarSlots');
+  container.innerHTML = '';
+  const byDate = {};
+  slots.forEach(s => { (byDate[s.slot_date] = byDate[s.slot_date] || []).push(s); });
+  Object.keys(byDate).sort().forEach(date => {
+    const dayWrap = document.createElement('div');
+    dayWrap.className = 'avail-day';
+    dayWrap.innerHTML = `<h3>${formatDateLabel(date)}</h3><div class="slots"></div>`;
+    const slotsEl = dayWrap.querySelector('.slots');
+    byDate[date].forEach(s => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'slot' + (s.full ? ' booked' : '');
+      btn.textContent = s.slot_time;
+      if(s.full){ btn.disabled = true; }
+      else {
+        btn.addEventListener('click', async () => {
+          const bookRes = await fetch('/api/book-pt-slot', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ booking_id: bookingId, slot_id: s.id })
+          });
+          const bookData = await bookRes.json();
+          const msgEl = document.getElementById('ptCalendarMsg');
+          if(bookData.success){
+            btn.classList.remove('selected');
+            btn.classList.add('confirmed');
+            btn.textContent += ' ✓ Confirmed';
+            document.querySelectorAll('#ptCalendarSlots .slot').forEach(el => el.disabled = true);
+            msgEl.textContent = 'Your session is booked. See you then!';
+          } else {
+            msgEl.textContent = bookData.error || 'Something went wrong.';
+          }
+        });
+      }
+      slotsEl.appendChild(btn);
+    });
+    container.appendChild(dayWrap);
+  });
+}
+
+function renderBlockPicker(slots, bookingId){
+  const container = document.getElementById('ptCalendarSlots');
+  container.innerHTML = '';
+  const chosen = [];
+  const byDate = {};
+  slots.forEach(s => { (byDate[s.slot_date] = byDate[s.slot_date] || []).push(s); });
+
+  Object.keys(byDate).sort().forEach(date => {
+    const dayWrap = document.createElement('div');
+    dayWrap.className = 'avail-day';
+    dayWrap.innerHTML = `<h3>${formatDateLabel(date)}</h3><div class="slots"></div>`;
+    const slotsEl = dayWrap.querySelector('.slots');
+    byDate[date].forEach(s => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'slot' + (s.full ? ' booked' : '');
+      btn.textContent = s.slot_time;
+      if(s.full){ btn.disabled = true; }
+      else {
+        btn.addEventListener('click', () => {
+          const idx = chosen.findIndex(c => c.id === s.id);
+          if(idx >= 0){ chosen.splice(idx, 1); btn.classList.remove('selected'); }
+          else if(chosen.length < 4){ chosen.push(s); btn.classList.add('selected'); }
+          document.getElementById('ptCalendarMsg').textContent = `${chosen.length}/4 sessions selected — one per week.`;
+        });
+      }
+      slotsEl.appendChild(btn);
+    });
+    container.appendChild(dayWrap);
+  });
+
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'btn btn-primary';
+  confirmBtn.style.cssText = 'display:block; margin:24px auto 0;';
+  confirmBtn.textContent = 'Confirm My 4 Weekly Sessions';
+  confirmBtn.addEventListener('click', async () => {
+    const msgEl = document.getElementById('ptCalendarMsg');
+    if(chosen.length !== 4){ msgEl.textContent = 'Please choose exactly 4 sessions, one per week.'; return; }
+    const bookRes = await fetch('/api/book-pt-slot', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ booking_id: bookingId, slot_ids: chosen.map(c => c.id) })
+    });
+    const bookData = await bookRes.json();
+    if(bookData.success){
+      msgEl.textContent = 'Your 4-week block is booked. See you then!';
+      document.querySelectorAll('#ptCalendarSlots .slot.selected').forEach(el => {
+        el.classList.remove('selected');
+        el.classList.add('confirmed');
+        el.disabled = true;
+      });
+      document.querySelectorAll('#ptCalendarSlots .slot').forEach(el => el.disabled = true);
+      confirmBtn.disabled = true;
+    } else {
+      msgEl.textContent = bookData.error || 'Something went wrong.';
+    }
+  });
+  container.appendChild(confirmBtn);
+}
+
+async function loadAcademyServiceOptions(){
+  const select = document.getElementById('acPlan');
+  try{
+    const res = await fetch('/api/services?category=academy');
+    const { services } = await res.json();
+    select.innerHTML = '<option value="" disabled selected>Choose an option</option>';
+    services.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.key;
+      opt.textContent = `${s.label} — £${s.fee}${s.mode === 'subscription' ? '/month' : ''}`;
+      select.appendChild(opt);
+    });
+  } catch(err){
+    select.innerHTML = '<option value="" disabled selected>Couldn\'t load options — please refresh</option>';
+  }
+}
+loadAcademyServiceOptions();
+loadPreviewCalendar(['academy'], 'acPreviewSlots');
+
+async function loadCfServiceOptions(){
+  const select = document.getElementById('cfType');
+  try{
+    const res = await fetch('/api/services?category=combat_fitness');
+    const { services } = await res.json();
+    select.innerHTML = '<option value="" disabled selected>Choose a block</option>';
+    services.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.key;
+      opt.textContent = `${s.label} — £${s.fee}`;
+      select.appendChild(opt);
+    });
+  } catch(err){
+    select.innerHTML = '<option value="" disabled selected>Couldn\'t load options — please refresh</option>';
+  }
+}
+loadCfServiceOptions();
+
+document.getElementById('cfForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const msg = document.getElementById('cfMsg');
+  const btn = document.getElementById('cfSubmitBtn');
+  const key = document.getElementById('cfType').value;
+  if(!key) return;
+  btn.disabled = true; btn.textContent = 'Redirecting to payment…';
+  try{
+    const res = await fetch('/api/create-pt-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_type: key,
+        name: document.getElementById('cfName').value,
+        email: document.getElementById('cfEmail').value,
+        phone: document.getElementById('cfPhone').value
+      })
+    });
+    const data = await res.json();
+    if(data.url){
+      window.location.href = data.url;
+    } else {
+      msg.style.display = 'block';
+      msg.innerHTML = data.error || 'Something went wrong — please try again.';
+      btn.disabled = false; btn.textContent = 'Pay & Reserve Your Spot';
+    }
+  } catch(err){
+    msg.style.display = 'block';
+    msg.innerHTML = 'Couldn\'t reach the booking service — please try again shortly.';
+    btn.disabled = false; btn.textContent = 'Pay & Reserve Your Spot';
+  }
+});
+
+document.getElementById('acPayBtn').addEventListener('click', async () => {
+  const msg = document.getElementById('acMsg');
+  const plan = document.getElementById('acPlan').value;
+  const email = document.getElementById('acEmail').value;
+  if(!email || !plan){
+    msg.style.display = 'block';
+    msg.innerHTML = 'Please enter your email and choose an option first.';
+    return;
+  }
+  try{
+    const res = await fetch('/api/create-academy-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan, email })
+    });
+    const data = await res.json();
+    if(data.url){ window.location.href = data.url; }
+    else { msg.style.display = 'block'; msg.innerHTML = data.error || 'Something went wrong.'; }
+  } catch(err){
+    msg.style.display = 'block';
+    msg.innerHTML = 'Couldn\'t reach the booking service — please try again shortly.';
+  }
+});
+
+async function unlockAcademyIfPaid(){
+  const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
+  if(params.get('paid') !== '1') return;
+  const sessionId = params.get('session_id');
+  if(!sessionId) return;
+
+  const verifyRes = await fetch('/api/verify-academy-payment?session_id=' + encodeURIComponent(sessionId));
+  const verify = await verifyRes.json();
+  if(!verify.valid) return;
+
+  document.getElementById('acLockBox').style.display = 'none';
+  document.getElementById('acPreviewCalendar').style.display = 'none';
+  document.getElementById('acCalendar').style.display = 'block';
+
+  const availRes = await fetch('/api/availability?category=academy');
+  const { slots } = await availRes.json();
+  const container = document.getElementById('acSlotsContainer');
+  container.innerHTML = '';
+  slots.forEach(s => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'slot' + (s.full ? ' booked' : '');
+    btn.textContent = `${new Date(s.slot_date + 'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'})} · ${s.slot_time}`;
+    if(s.full){ btn.disabled = true; }
+    else {
+      btn.addEventListener('click', async () => {
+        document.querySelectorAll('#acSlotsContainer .slot').forEach(el => el.classList.remove('selected'));
+        btn.classList.add('selected');
+        const bookRes = await fetch('/api/book-academy-slot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId, slot_id: s.id, name: verify.email, email: verify.email })
+        });
+        const bookData = await bookRes.json();
+        if(bookData.success){
+          btn.classList.remove('selected');
+          btn.classList.add('confirmed');
+          btn.textContent += ' ✓ Confirmed';
+        }
+      });
+    }
+    container.appendChild(btn);
+  });
+}
+
+async function toggleAdminPreview(){
+  const link = document.getElementById('previewToggleLink');
+  if(localStorage.getItem('awa_admin_preview') === 'true'){
+    localStorage.removeItem('awa_admin_preview');
+    location.reload();
+    return;
+  }
+  const password = prompt('Admin password:');
+  if(!password) return;
+  try{
+    const res = await fetch('/api/admin-verify', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ password })
+    });
+    const data = await res.json();
+    if(data.valid){
+      localStorage.setItem('awa_admin_preview', 'true');
+      location.reload();
+    } else {
+      alert('Incorrect password.');
+    }
+  } catch(err){
+    alert('Couldn\'t reach the server.');
+  }
+}
+
+const ADMIN_PREVIEW = localStorage.getItem('awa_admin_preview') === 'true';
+
+fetch('/api/membership-status')
+  .then(res => res.json())
+  .then(data => {
+    if (data.academy_training || ADMIN_PREVIEW) {
+      const nav = document.getElementById('navAcademyTraining');
+      const card = document.getElementById('pathAcademyTraining');
+      if (nav) nav.style.display = '';
+      if (card) card.style.display = '';
+    } else if (window.location.hash.replace('#','').split('?')[0] === 'ac') {
+      showPage('home');
+    }
+    if (data.solo_challenge || data.fitness_subscription || ADMIN_PREVIEW) {
+      const nav = document.getElementById('navAcademyLink');
+      const teaser = document.getElementById('soloChallengeTeaser');
+      if (nav) nav.style.display = '';
+      if (teaser) teaser.style.display = 'block';
+    }
+    if (ADMIN_PREVIEW){
+      document.getElementById('previewToggleLink').textContent = 'Admin Preview: ON (click to turn off)';
+      document.getElementById('previewToggleLink').style.opacity = '0.8';
+      document.getElementById('previewToggleLink').style.color = 'var(--gold-bright)';
+    }
+  })
+  .catch(() => { /* stay hidden if the check fails */ });
+
+(function init(){
+  const hash = window.location.hash.replace('#','');
+  const page = hash.split('?')[0];
+  if(page === 'pt' || page === 'ac' || page === 'cf'){ showPage(page); } else { showPage('home'); }
+  if(page === 'ac'){ unlockAcademyIfPaid(); }
+  if(page === 'pt'){ unlockPtCalendarIfPaid(); }
+})();
+</script>
+
+</body>
+</html>
