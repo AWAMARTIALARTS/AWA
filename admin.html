@@ -49,6 +49,24 @@
     <div class="eyebrow">Admin</div>
     <h1>Academy Content &amp; Private Notes</h1>
 
+    <div class="card" style="margin-top:24px; border-color:#8fd68f;">
+      <div class="eyebrow">What's Live to the Public</div>
+      <div id="launchRows" style="margin-top:14px;"></div>
+      <div class="msg" id="launchMsg"></div>
+    </div>
+    <template id="launchRowTemplate">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--line); font-family:'Inter',sans-serif;">
+        <div>
+          <strong data-name></strong>
+          <div data-status style="font-size:13px; opacity:0.7; margin-top:2px;">Checking…</div>
+        </div>
+        <div>
+          <button class="btn" data-launch style="padding:8px 16px; font-size:12px;">Launch</button>
+          <button class="btn" data-unlaunch style="padding:8px 16px; font-size:12px; background:transparent; border:1px solid var(--line); color:var(--parchment); margin-left:8px;">Take Offline</button>
+        </div>
+      </div>
+    </template>
+
     <div class="tabs" style="margin-top:30px;">
       <button class="active" onclick="showAdminTab('content')">Manage Content</button>
       <button onclick="showAdminTab('calendar')">Manage Calendar</button>
@@ -62,14 +80,18 @@
         <div class="field">
           <label for="cTopic">Topic</label>
           <select id="cTopic">
-            <option value="stance-guard">Stance & Guard</option>
-            <option value="movement">Movement</option>
-            <option value="punch-technique">Punch Technique</option>
-            <option value="head-movement">Head Movement</option>
-            <option value="bag-work">Bag Work</option>
-            <option value="fitness-workouts">Fitness Workouts</option>
-            <option value="circuit-training">Circuit Training</option>
-            <option value="nutrition">Nutrition</option>
+            <optgroup label="AWA Solo Challenge (graded syllabus)">
+              <option value="stance-guard">Stance & Guard</option>
+              <option value="movement">Movement</option>
+              <option value="punch-technique">Punch Technique</option>
+              <option value="head-movement">Head Movement</option>
+            </optgroup>
+            <optgroup label="AWA Fitness Subscription (general content)">
+              <option value="bag-work">Bag Work</option>
+              <option value="fitness-workouts">Fitness Workouts</option>
+              <option value="circuit-training">Circuit Training</option>
+              <option value="nutrition">Nutrition</option>
+            </optgroup>
           </select>
         </div>
         <div class="field"><label for="cTitle">Title</label><input type="text" id="cTitle"></div>
@@ -85,14 +107,18 @@
           <label for="viewTopic">Filter by Topic</label>
           <select id="viewTopic" onchange="loadContentList()">
             <option value="">All Topics</option>
-            <option value="stance-guard">Stance & Guard</option>
-            <option value="movement">Movement</option>
-            <option value="punch-technique">Punch Technique</option>
-            <option value="head-movement">Head Movement</option>
-            <option value="bag-work">Bag Work</option>
-            <option value="fitness-workouts">Fitness Workouts</option>
-            <option value="circuit-training">Circuit Training</option>
-            <option value="nutrition">Nutrition</option>
+            <optgroup label="AWA Solo Challenge">
+              <option value="stance-guard">Stance & Guard</option>
+              <option value="movement">Movement</option>
+              <option value="punch-technique">Punch Technique</option>
+              <option value="head-movement">Head Movement</option>
+            </optgroup>
+            <optgroup label="AWA Fitness Subscription">
+              <option value="bag-work">Bag Work</option>
+              <option value="fitness-workouts">Fitness Workouts</option>
+              <option value="circuit-training">Circuit Training</option>
+              <option value="nutrition">Nutrition</option>
+            </optgroup>
           </select>
         </div>
         <div id="contentList"></div>
@@ -159,6 +185,24 @@
           </select>
         </div>
         <div id="slotsList"></div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:16px; margin-bottom:16px;">Manually Add a Booking</h3>
+        <p style="font-family:'Inter',sans-serif; font-size:13.5px; opacity:0.7; margin-bottom:16px;">For customers who paid you directly (cash, bank transfer) rather than through the site.</p>
+        <div class="field"><label for="mbName">Full Name</label><input type="text" id="mbName"></div>
+        <div class="field"><label for="mbEmail">Email</label><input type="email" id="mbEmail"></div>
+        <div class="field"><label for="mbPhone">Phone (optional)</label><input type="text" id="mbPhone"></div>
+        <div class="field">
+          <label for="mbService">Service</label>
+          <select id="mbService" onchange="loadManualBookingSlots()"><option value="">Loading…</option></select>
+        </div>
+        <div class="field" id="mbSlotField" style="display:none;">
+          <label for="mbSlot">Slot</label>
+          <select id="mbSlot"><option value="">No slots found</option></select>
+        </div>
+        <button class="btn" id="mbSubmitBtn">Add Booking</button>
+        <div class="msg" id="mbMsg"></div>
       </div>
     </div>
 
@@ -246,6 +290,66 @@ Level 5 — Full integration, pads at competition pace, final grading
 </div>
 
 <script>
+const LAUNCH_PRODUCTS = [
+  { key: 'academy_training', label: 'Academy Training (Classes)' },
+  { key: 'solo_challenge', label: 'AWA Solo Challenge — £50/month' },
+  { key: 'fitness_subscription', label: 'AWA Fitness Subscription — £25/month' },
+];
+
+function buildLaunchRows(){
+  const container = document.getElementById('launchRows');
+  const template = document.getElementById('launchRowTemplate');
+  container.innerHTML = '';
+  LAUNCH_PRODUCTS.forEach(p => {
+    const row = template.content.cloneNode(true);
+    row.querySelector('[data-name]').textContent = p.label;
+    row.querySelector('[data-status]').id = 'status-' + p.key;
+    row.querySelector('[data-launch]').addEventListener('click', () => setLaunch(p.key, true));
+    row.querySelector('[data-unlaunch]').addEventListener('click', () => setLaunch(p.key, false));
+    container.appendChild(row);
+  });
+}
+
+async function loadLaunchStatus(){
+  try{
+    const res = await fetch('/api/membership-status');
+    const data = await res.json();
+    LAUNCH_PRODUCTS.forEach(p => {
+      const el = document.getElementById('status-' + p.key);
+      if (!el) return;
+      const isLive = p.key === 'academy_training' ? data.academy_training
+        : p.key === 'solo_challenge' ? data.solo_challenge
+        : data.fitness_subscription;
+      el.textContent = isLive ? 'Live — visible to the public' : 'Not live — hidden, safe to keep building';
+      el.style.color = isLive ? '#8fd68f' : '';
+    });
+  } catch(err){ /* silent */ }
+}
+
+async function setLaunch(product, live){
+  const msg = document.getElementById('launchMsg');
+  const label = LAUNCH_PRODUCTS.find(p => p.key === product).label;
+  if(live && !confirm(`This makes "${label}" visible and usable by the public right now. Continue?`)) return;
+  try{
+    const res = await fetch('/api/admin-launch-membership', {
+      method:'POST',
+      headers:{'Content-Type':'application/json', 'x-admin-password': ADMIN_PASSWORD},
+      body: JSON.stringify({ product, live })
+    });
+    const data = await res.json();
+    if(data.success){
+      msg.style.display='block';
+      msg.textContent = live ? `${label} is now live.` : `${label} taken offline.`;
+      loadLaunchStatus();
+    } else {
+      msg.style.display='block'; msg.textContent = data.error || 'Something went wrong.';
+    }
+  } catch(err){
+    msg.style.display='block'; msg.textContent = 'Couldn\'t reach the server.';
+  }
+}
+
+
 let ADMIN_PASSWORD = '';
 
 function generateTimeOptions(){
@@ -344,6 +448,9 @@ document.getElementById('gateBtn').addEventListener('click', async () => {
       document.getElementById('page-gate').classList.remove('active');
       document.getElementById('page-admin').classList.add('active');
       loadContentList();
+      buildLaunchRows();
+      loadLaunchStatus();
+      loadManualBookingServices();
     } else {
       msg.style.display = 'block'; msg.textContent = 'Incorrect password.';
     }
@@ -383,6 +490,94 @@ document.getElementById('addSlotBtn').addEventListener('click', async () => {
     if(data.success){
       msg.style.display='block'; msg.textContent = 'Slot added.';
       document.getElementById('sDate').value = '';
+      loadSlots();
+    } else {
+      msg.style.display='block'; msg.textContent = data.error || 'Something went wrong.';
+    }
+  } catch(err){
+    msg.style.display='block'; msg.textContent = 'Couldn\'t reach the server.';
+  }
+});
+
+const MANUAL_BOOKING_CATEGORIES = ['personal_training', 'group_training', 'combat_fitness'];
+let MB_SERVICE_CATEGORY = {};
+
+async function loadManualBookingServices(){
+  const select = document.getElementById('mbService');
+  select.innerHTML = '<option value="">Choose a service</option>';
+  MB_SERVICE_CATEGORY = {};
+  for(const cat of MANUAL_BOOKING_CATEGORIES){
+    try{
+      const res = await fetch('/api/services?category=' + cat);
+      const { services } = await res.json();
+      services.forEach(s => {
+        MB_SERVICE_CATEGORY[s.key] = cat;
+        const opt = document.createElement('option');
+        opt.value = s.key;
+        opt.textContent = `${s.label} — £${s.fee}`;
+        select.appendChild(opt);
+      });
+    } catch(err){ /* skip category on failure */ }
+  }
+}
+
+async function loadManualBookingSlots(){
+  const key = document.getElementById('mbService').value;
+  const category = MB_SERVICE_CATEGORY[key];
+  const slotField = document.getElementById('mbSlotField');
+  const slotSelect = document.getElementById('mbSlot');
+
+  // Only personal_training and group_training use the slots calendar
+  if(category !== 'personal_training' && category !== 'group_training'){
+    slotField.style.display = 'none';
+    return;
+  }
+  slotField.style.display = 'block';
+  slotSelect.innerHTML = '<option value="">Loading…</option>';
+  try{
+    const res = await fetch('/api/admin-slots?category=' + category, { headers: { 'x-admin-password': ADMIN_PASSWORD } });
+    const data = await res.json();
+    const open = (data.slots || []).filter(s => s.booked_count < s.capacity && !s.blocked);
+    if(!open.length){
+      slotSelect.innerHTML = '<option value="">No open slots — add one above first</option>';
+      return;
+    }
+    slotSelect.innerHTML = '<option value="">No specific slot (optional)</option>';
+    open.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = `${s.slot_date} · ${s.slot_time} (${s.booked_count}/${s.capacity})`;
+      slotSelect.appendChild(opt);
+    });
+  } catch(err){
+    slotSelect.innerHTML = '<option value="">Couldn\'t load slots</option>';
+  }
+}
+
+document.getElementById('mbSubmitBtn').addEventListener('click', async () => {
+  const msg = document.getElementById('mbMsg');
+  const name = document.getElementById('mbName').value;
+  const email = document.getElementById('mbEmail').value;
+  const phone = document.getElementById('mbPhone').value;
+  const service_type = document.getElementById('mbService').value;
+  const slot_id = document.getElementById('mbSlot').value || undefined;
+
+  if(!name || !email || !service_type){
+    msg.style.display='block'; msg.textContent = 'Name, email, and service are required.';
+    return;
+  }
+  try{
+    const res = await fetch('/api/admin-manual-booking', {
+      method:'POST',
+      headers:{'Content-Type':'application/json', 'x-admin-password': ADMIN_PASSWORD},
+      body: JSON.stringify({ name, email, phone, service_type, slot_id })
+    });
+    const data = await res.json();
+    if(data.success){
+      msg.style.display='block'; msg.textContent = 'Booking added.';
+      document.getElementById('mbName').value = '';
+      document.getElementById('mbEmail').value = '';
+      document.getElementById('mbPhone').value = '';
       loadSlots();
     } else {
       msg.style.display='block'; msg.textContent = data.error || 'Something went wrong.';
