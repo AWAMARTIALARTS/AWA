@@ -70,6 +70,7 @@
     <div class="tabs" style="margin-top:30px;">
       <button class="active" onclick="showAdminTab('content')">Manage Content</button>
       <button onclick="showAdminTab('calendar')">Manage Calendar</button>
+      <button onclick="showAdminTab('timetable')">Academy Timetable</button>
       <button onclick="showAdminTab('submissions')">Video Submissions</button>
       <button onclick="showAdminTab('private')">Mission &amp; Syllabus (Private)</button>
     </div>
@@ -154,6 +155,38 @@
       </div>
 
       <div class="card">
+        <h3 style="font-size:16px; margin-bottom:16px;">Set Up a Week of Availability</h3>
+        <p style="font-family:'Inter',sans-serif; font-size:13.5px; opacity:0.7; margin-bottom:16px;">Pick the days and hours you're generally available, and this creates every matching slot in one go — much faster than adding them one at a time.</p>
+        <div class="field">
+          <label for="bulkCategory">Page</label>
+          <select id="bulkCategory">
+            <option value="personal_training">Personal Training</option>
+            <option value="group_training">4-1 Small Group</option>
+            <option value="academy">Academy Training</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Days of the Week</label>
+          <div style="display:flex; gap:12px; flex-wrap:wrap; font-family:'Inter',sans-serif; font-size:13px;">
+            <label style="text-transform:none; letter-spacing:normal; font-size:14px;"><input type="checkbox" class="bulkDay" value="1" style="width:auto; margin-right:6px;">Mon</label>
+            <label style="text-transform:none; letter-spacing:normal; font-size:14px;"><input type="checkbox" class="bulkDay" value="2" style="width:auto; margin-right:6px;">Tue</label>
+            <label style="text-transform:none; letter-spacing:normal; font-size:14px;"><input type="checkbox" class="bulkDay" value="3" style="width:auto; margin-right:6px;">Wed</label>
+            <label style="text-transform:none; letter-spacing:normal; font-size:14px;"><input type="checkbox" class="bulkDay" value="4" style="width:auto; margin-right:6px;">Thu</label>
+            <label style="text-transform:none; letter-spacing:normal; font-size:14px;"><input type="checkbox" class="bulkDay" value="5" style="width:auto; margin-right:6px;">Fri</label>
+            <label style="text-transform:none; letter-spacing:normal; font-size:14px;"><input type="checkbox" class="bulkDay" value="6" style="width:auto; margin-right:6px;">Sat</label>
+            <label style="text-transform:none; letter-spacing:normal; font-size:14px;"><input type="checkbox" class="bulkDay" value="0" style="width:auto; margin-right:6px;">Sun</label>
+          </div>
+        </div>
+        <div class="field"><label for="bulkStartTime">From</label><select id="bulkStartTime"></select></div>
+        <div class="field"><label for="bulkEndTime">To</label><select id="bulkEndTime"></select></div>
+        <div class="field"><label for="bulkStartDate">Starting From</label><input type="date" id="bulkStartDate"></div>
+        <div class="field"><label for="bulkWeeks">Number of Weeks</label><input type="number" id="bulkWeeks" value="4" min="1" max="12"></div>
+        <div class="field"><label for="bulkCapacity">Capacity (leave as 1 unless it's the small group)</label><input type="number" id="bulkCapacity" value="1" min="1"></div>
+        <button class="btn" id="bulkAddBtn">Generate Availability</button>
+        <div class="msg" id="bulkMsg"></div>
+      </div>
+
+      <div class="card">
         <h3 style="font-size:16px; margin-bottom:16px;">Add a Slot</h3>
         <div class="field">
           <label for="sCategory">Page</label>
@@ -206,6 +239,19 @@
       </div>
     </div>
 
+    <div id="tab-timetable" style="display:none;">
+      <div class="card">
+        <h3 style="font-size:16px; margin-bottom:16px;">Weekly Class Timetable</h3>
+        <p style="font-family:'Inter',sans-serif; font-size:13.5px; opacity:0.7; margin-bottom:16px;">This shows on the public Academy Training page. Add a row for each class time.</p>
+        <div id="timetableRows"></div>
+        <button class="btn" id="addTimetableRowBtn" style="background:transparent; border:1px solid var(--line); color:var(--parchment); margin-top:10px;">+ Add Row</button>
+        <div style="margin-top:20px;">
+          <button class="btn" id="saveTimetableBtn">Save Timetable</button>
+        </div>
+        <div class="msg" id="timetableMsg"></div>
+      </div>
+    </div>
+
     <div id="tab-submissions" style="display:none;">
       <div class="card">
         <h3 style="font-size:16px; margin-bottom:16px;">Pending Review</h3>
@@ -214,77 +260,24 @@
     </div>
 
     <div id="tab-private" style="display:none;">
-      <div class="card">
-        <h3 style="font-size:20px; margin-bottom:16px;">Cardio Training Guide (Private)</h3>
-        <p class="private-text">All cardio work is prescribed by heart rate zone, not pace. Wear a heart rate monitor (chest strap or wrist) for every session.
-
-Zone 1 (50-60% Max HR) — Recovery. Very light effort, full conversation.
-Zone 2 (60-70% Max HR) — Aerobic Base. Comfortable, sustainable, slightly quickened breath.
-Zone 3 (70-80% Max HR) — Tempo. Moderately hard, breathing noticeably harder.
-Zone 4 (80-90% Max HR) — Threshold. Hard, short sentences only.
-Zone 5 (90-100% Max HR) — Max Effort. All-out, unsustainable beyond short bursts.
-
-Zone 2 Base Run: 30-45 min continuous, Zone 2, no rest.
-Long Zone 2 Conditioning: 45-60 min continuous, Zone 2, no rest.
-Tempo Intervals: 4 x 8 min, Zone 3, 3 min Zone 1 between reps.
-Threshold Repeats: 5 x 5 min, Zone 4, 2 min Zone 1 between reps.
-HIIT Sprints: 10 x 30 sec, Zone 5, 90 sec Zone 1 between reps.
-
-Estimating max HR: 220 minus age is a rough guide only — use a lab or field test where possible, and let how you feel override the numbers.</p>
-      </div>
-
-      <div class="card">
-        <h3 style="font-size:20px; margin-bottom:16px;">Strength Development Principles (Private)</h3>
-        <p class="private-text">Conjugate Method (Louie Simmons / Westside Barbell): rotate Max Effort work (heavy singles/doubles, 90%+, rotated every 1-2 weeks to avoid staleness) with Dynamic Effort work (50-60% loads moved explosively). Builds raw strength and the speed to express it.
-
-Triphasic Training (Cal Dietz): dedicate blocks to eccentric, then isometric, then concentric emphasis within the same lifts. Slow controlled eccentrics build tendon strength and force absorption — directly protective for a fighter landing kicks or checking shots.
-
-Base lifts: squat, hinge, press, and pull patterns cycled through intensity/volume waves as the foundation everything else is built on.</p>
-      </div>
-
-      <div class="card">
-        <h3 style="font-size:20px; margin-bottom:16px;">Power Development Principles (Private)</h3>
-        <p class="private-text">Rate of Force Development: lighter loads moved maximally fast — trap bar jumps, medicine ball throws, simplified Olympic lift derivatives — trains the nervous system to produce force quickly, not just a lot of it.
-
-Post-Activation Potentiation (contrast training): pair a heavy strength movement with an explosive movement of a similar pattern (e.g. heavy trap bar deadlift into broad jumps). Use sparingly, in-season, as a peaking tool — fight-week or block-ending sessions — not a daily staple.</p>
-      </div>
-
-      <div class="card">
-        <h3 style="font-size:20px; margin-bottom:16px;">Explosiveness Development Principles (Private)</h3>
-        <p class="private-text">Plyometric progression: start low-amplitude (pogo hops, ankle bounces) before progressing to high-amplitude (broad jumps, depth jumps). Technique before intensity, always.
-
-Reactive strength: minimise ground contact time in jumps and bounds to train the stretch-shortening cycle — the same mechanism behind fast strikes and quick footwork off the back foot.</p>
-      </div>
-
-      <div class="card">
-        <h3 style="font-size:20px; margin-bottom:16px;">Movement Development Principles (Private)</h3>
-        <p class="private-text">Joint-by-Joint Approach (Mike Boyle): each joint alternates between needing mobility or stability. Bias unilateral work — split squats, single-leg RDLs, lateral lunges — since striking and grappling both happen from a staggered, often single-leg base.
-
-Movement-Based Training (Vern Gambetta): multi-directional footwork drills, rotational power work (cable rotations, med ball throws), and reactive agility build the general athleticism that specific technique sits on top of.
-
-Work Capacity & Aerobic Base (Joel Jamieson): a bigger aerobic engine (built through Zone 2 conditioning above) speeds recovery between rounds and between explosive efforts within a round — power output stays higher for longer.</p>
-      </div>
-
-      <div class="card">
-        <h3 style="font-size:20px; margin-bottom:16px;">Mission Statement</h3>
-        <p class="private-text">Martial arts is complex, and everyone develops at their own pace. Patience is the foundation every level is built on — come ready to work, ready to be patient with yourself, and ready to trust the process.
-
-This is the private reference copy. The same message appears publicly on the homepage and Combat Fitness page, worded for visitors.</p>
-      </div>
-      <div class="card">
-        <h3 style="font-size:20px; margin-bottom:16px;">8-Week Combat Fitness Transformation — Coach Syllabus</h3>
-        <p class="private-text">Full syllabus reference: see the AWA Combat Fitness Transformation Manual (Word document) for the complete AWA Strike Level 1-5 breakdown, weekly schedule, and grading criteria.
-
-Quick reference:
-Level 1 — Foundations: guard, range, blocking the 1,2,3, straight-shot returns (1,2 / 1,2,1 / 1,1,2 / 2,1,2)
-Level 2 — Head Movement & Lead Hand: 1,3 / 1,1 / 3,1 / slip,3 — rear hand added once balance holds
-Level 3 — Mid-Range Fighting: 1,2,3 / 1,2,3,4 / 2,3,2
-Level 4 — Range Transition: 1,1 / 1,1,2-move right / 3,2,roll / 2,3,2,roll / 1,slip 2,slip / 2,3
-Level 5 — Full integration, pads at competition pace, final grading
-
-8-week schedule: two levels introduced per fortnight, Week 8 reserved for Level 5 and grading.</p>
-      </div>
+      <div id="privateContentBoxes"><p style="opacity:0.6;">Loading…</p></div>
     </div>
+    <template id="privateBoxTemplate">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h3 style="font-size:20px; margin:0;" data-title></h3>
+          <span style="cursor:pointer; font-size:18px;" data-edit-icon title="Edit">✏️</span>
+        </div>
+        <p class="private-text" data-display></p>
+        <div data-edit-area style="display:none;">
+          <textarea data-textarea style="width:100%; min-height:200px; background:var(--black-2); border:1px solid var(--line); color:var(--parchment); padding:14px; font-family:'Inter',sans-serif; font-size:14px; border-radius:2px;"></textarea>
+          <div style="margin-top:12px; display:flex; gap:10px;">
+            <button class="btn" data-save style="padding:8px 16px; font-size:12px;">Save</button>
+            <button class="btn" data-cancel style="padding:8px 16px; font-size:12px; background:transparent; border:1px solid var(--line); color:var(--parchment);">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </template>
   </div>
 
 </div>
@@ -375,7 +368,7 @@ generateTimeOptions();
 populateHourRangeOptions();
 
 function populateHourRangeOptions(){
-  [document.getElementById('bStart'), document.getElementById('bEnd')].forEach(select => {
+  [document.getElementById('bStart'), document.getElementById('bEnd'), document.getElementById('bulkStartTime'), document.getElementById('bulkEndTime')].forEach(select => {
     let minutes = 6 * 60;
     const endMinutes = 22 * 60;
     while (minutes <= endMinutes) {
@@ -393,6 +386,39 @@ function populateHourRangeOptions(){
     }
   });
 }
+
+document.getElementById('bulkAddBtn').addEventListener('click', async () => {
+  const msg = document.getElementById('bulkMsg');
+  const category = document.getElementById('bulkCategory').value;
+  const days_of_week = Array.from(document.querySelectorAll('.bulkDay:checked')).map(el => parseInt(el.value, 10));
+  const start_time = document.getElementById('bulkStartTime').value;
+  const end_time = document.getElementById('bulkEndTime').value;
+  const start_date = document.getElementById('bulkStartDate').value;
+  const weeks = parseInt(document.getElementById('bulkWeeks').value, 10) || 4;
+  const capacity = parseInt(document.getElementById('bulkCapacity').value, 10) || 1;
+
+  if(!days_of_week.length || !start_date){
+    msg.style.display='block'; msg.textContent = 'Pick at least one day and a start date.';
+    return;
+  }
+  try{
+    const res = await fetch('/api/admin-bulk-slots', {
+      method:'POST',
+      headers:{'Content-Type':'application/json', 'x-admin-password': ADMIN_PASSWORD},
+      body: JSON.stringify({ category, days_of_week, start_time, end_time, start_date, weeks, capacity })
+    });
+    const data = await res.json();
+    if(data.success){
+      msg.style.display='block';
+      msg.textContent = data.created ? `Created ${data.created} slot(s).` : (data.message || 'Nothing new to create.');
+      loadSlots();
+    } else {
+      msg.style.display='block'; msg.textContent = data.error || 'Something went wrong.';
+    }
+  } catch(err){
+    msg.style.display='block'; msg.textContent = 'Couldn\'t reach the server.';
+  }
+});
 
 function toggleHourRange(){
   const wholeDay = document.getElementById('bWholeDay').checked;
@@ -464,11 +490,149 @@ function showAdminTab(tab){
   event.target.classList.add('active');
   document.getElementById('tab-content').style.display = tab === 'content' ? 'block' : 'none';
   document.getElementById('tab-calendar').style.display = tab === 'calendar' ? 'block' : 'none';
+  document.getElementById('tab-timetable').style.display = tab === 'timetable' ? 'block' : 'none';
   document.getElementById('tab-submissions').style.display = tab === 'submissions' ? 'block' : 'none';
   document.getElementById('tab-private').style.display = tab === 'private' ? 'block' : 'none';
   if(tab === 'submissions') loadSubmissions();
   if(tab === 'calendar') loadSlots();
+  if(tab === 'timetable') loadTimetable();
+  if(tab === 'private') loadPrivateContent();
 }
+
+const PRIVATE_BOXES = [
+  { key: 'private_cardio', title: 'Cardio Training Guide (Private)' },
+  { key: 'private_strength', title: 'Strength Development Principles (Private)' },
+  { key: 'private_power', title: 'Power Development Principles (Private)' },
+  { key: 'private_explosiveness', title: 'Explosiveness Development Principles (Private)' },
+  { key: 'private_movement', title: 'Movement Development Principles (Private)' },
+  { key: 'private_mission', title: 'Mission Statement' },
+  { key: 'private_syllabus', title: '8-Week Combat Fitness Transformation — Coach Syllabus' },
+];
+
+async function loadPrivateContent(){
+  const container = document.getElementById('privateContentBoxes');
+  const template = document.getElementById('privateBoxTemplate');
+  try{
+    const res = await fetch('/api/admin-private-content', { headers: { 'x-admin-password': ADMIN_PASSWORD } });
+    const data = await res.json();
+    container.innerHTML = '';
+    PRIVATE_BOXES.forEach(box => {
+      const el = template.content.cloneNode(true);
+      const cardDiv = el.querySelector('.card');
+      cardDiv.dataset.key = box.key;
+      el.querySelector('[data-title]').textContent = box.title;
+      el.querySelector('[data-display]').textContent = data.content[box.key] || '';
+      el.querySelector('[data-textarea]').value = data.content[box.key] || '';
+
+      el.querySelector('[data-edit-icon]').addEventListener('click', () => {
+        cardDiv.querySelector('[data-display]').style.display = 'none';
+        cardDiv.querySelector('[data-edit-area]').style.display = 'block';
+      });
+      el.querySelector('[data-cancel]').addEventListener('click', () => {
+        cardDiv.querySelector('[data-textarea]').value = cardDiv.querySelector('[data-display]').textContent;
+        cardDiv.querySelector('[data-display]').style.display = 'block';
+        cardDiv.querySelector('[data-edit-area]').style.display = 'none';
+      });
+      el.querySelector('[data-save]').addEventListener('click', async () => {
+        const newValue = cardDiv.querySelector('[data-textarea]').value;
+        const saveBtn = cardDiv.querySelector('[data-save]');
+        saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+        try{
+          const saveRes = await fetch('/api/admin-private-content', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json', 'x-admin-password': ADMIN_PASSWORD},
+            body: JSON.stringify({ key: box.key, value: newValue })
+          });
+          const saveData = await saveRes.json();
+          if(saveData.success){
+            cardDiv.querySelector('[data-display]').textContent = newValue;
+            cardDiv.querySelector('[data-display]').style.display = 'block';
+            cardDiv.querySelector('[data-edit-area]').style.display = 'none';
+          } else {
+            alert(saveData.error || 'Something went wrong.');
+          }
+        } catch(err){
+          alert('Couldn\'t reach the server.');
+        }
+        saveBtn.disabled = false; saveBtn.textContent = 'Save';
+      });
+
+      container.appendChild(el);
+    });
+  } catch(err){
+    container.innerHTML = '<p style="opacity:0.6;">Couldn\'t load private content.</p>';
+  }
+}
+
+let timetableRows = [];
+
+function renderTimetableRows(){
+  const container = document.getElementById('timetableRows');
+  container.innerHTML = '';
+  timetableRows.forEach((row, i) => {
+    const rowEl = document.createElement('div');
+    rowEl.style.cssText = 'display:flex; gap:10px; margin-bottom:12px; align-items:flex-end;';
+    rowEl.innerHTML = `
+      <div style="flex:1;">
+        <label style="font-family:'Inter',sans-serif; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--gold); display:block; margin-bottom:4px;">Day</label>
+        <select data-field="day" style="width:100%; background:var(--black-2); border:1px solid var(--line); color:var(--parchment); padding:10px; border-radius:2px;">
+          ${['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(d => `<option value="${d}" ${row.day === d ? 'selected' : ''}>${d}</option>`).join('')}
+        </select>
+      </div>
+      <div style="flex:1;">
+        <label style="font-family:'Inter',sans-serif; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--gold); display:block; margin-bottom:4px;">Time</label>
+        <input data-field="time" type="text" value="${row.time || ''}" placeholder="7:00pm - 8:00pm" style="width:100%; background:var(--black-2); border:1px solid var(--line); color:var(--parchment); padding:10px; border-radius:2px;">
+      </div>
+      <div style="flex:1;">
+        <label style="font-family:'Inter',sans-serif; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--gold); display:block; margin-bottom:4px;">Class / Theme (optional)</label>
+        <input data-field="note" type="text" value="${row.note || ''}" placeholder="e.g. Beginners" style="width:100%; background:var(--black-2); border:1px solid var(--line); color:var(--parchment); padding:10px; border-radius:2px;">
+      </div>
+      <span class="danger" style="padding-bottom:12px;" onclick="removeTimetableRow(${i})">Delete</span>
+    `;
+    rowEl.querySelector('[data-field="day"]').addEventListener('change', e => timetableRows[i].day = e.target.value);
+    rowEl.querySelector('[data-field="time"]').addEventListener('input', e => timetableRows[i].time = e.target.value);
+    rowEl.querySelector('[data-field="note"]').addEventListener('input', e => timetableRows[i].note = e.target.value);
+    container.appendChild(rowEl);
+  });
+}
+
+function removeTimetableRow(i){
+  timetableRows.splice(i, 1);
+  renderTimetableRows();
+}
+
+document.getElementById('addTimetableRowBtn').addEventListener('click', () => {
+  timetableRows.push({ day: 'Monday', time: '', note: '' });
+  renderTimetableRows();
+});
+
+async function loadTimetable(){
+  try{
+    const res = await fetch('/api/academy-timetable');
+    const data = await res.json();
+    timetableRows = data.timetable || [];
+    renderTimetableRows();
+  } catch(err){ /* silent */ }
+}
+
+document.getElementById('saveTimetableBtn').addEventListener('click', async () => {
+  const msg = document.getElementById('timetableMsg');
+  try{
+    const res = await fetch('/api/academy-timetable', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'x-admin-password': ADMIN_PASSWORD},
+      body: JSON.stringify({ timetable: timetableRows })
+    });
+    const data = await res.json();
+    if(data.success){
+      msg.style.display = 'block'; msg.textContent = 'Timetable saved.';
+    } else {
+      msg.style.display = 'block'; msg.textContent = data.error || 'Something went wrong.';
+    }
+  } catch(err){
+    msg.style.display = 'block'; msg.textContent = 'Couldn\'t reach the server.';
+  }
+});
 
 document.getElementById('addSlotBtn').addEventListener('click', async () => {
   const msg = document.getElementById('slotMsg');
