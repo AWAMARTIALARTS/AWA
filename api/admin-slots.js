@@ -39,19 +39,34 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'DELETE') {
-    const { id } = req.body || {};
-    if (!id) return res.status(400).json({ error: 'Missing id.' });
+    const { id, ids } = req.body || {};
+    const targetIds = ids && ids.length ? ids : (id ? [id] : []);
+    if (!targetIds.length) return res.status(400).json({ error: 'Missing id or ids.' });
 
-    // Refuse to delete a slot that already has bookings against it —
+    // Refuse to delete any slot that already has bookings against it —
     // safer to keep the booking record intact and just stop offering new ones
-    const { data: slot } = await supabase.from('slots').select('booked_count').eq('id', id).single();
-    if (slot && slot.booked_count > 0) {
-      return res.status(400).json({ error: 'This slot already has bookings against it and can\'t be deleted.' });
+    const { data: slotsToCheck } = await supabase
+      .from('slots')
+      .select('id, booked_count')
+      .in('id', targetIds);
+
+    const blocked = (slotsToCheck || []).filter(s => s.booked_count > 0).map(s => s.id);
+    const deletable = targetIds.filter(tid => !blocked.includes(tid));
+
+    if (deletable.length) {
+      const { error } = await supabase.from('slots').delete().in('id', deletable);
+      if (error) return res.status(500).json({ error: error.message });
     }
 
-    const { error } = await supabase.from('slots').delete().eq('id', id);
-    if (error) return res.status(500).json({ error: error.message });
-    return res.status(200).json({ success: true });
+    if (blocked.length && !deletable.length) {
+      return res.status(400).json({ error: 'All selected slots already have bookings against them and can\'t be deleted.' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      deleted: deletable.length,
+      skipped: blocked.length,
+    });
   }
 
   res.status(405).json({ error: 'Method not allowed' });
