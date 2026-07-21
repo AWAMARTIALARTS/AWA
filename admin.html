@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin — All Walks Academy</title>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --black:#0b0a08; --black-2:#141210; --gold:#c9a24b; --gold-bright:#e8c874;
@@ -177,8 +177,8 @@
             <label style="text-transform:none; letter-spacing:normal; font-size:14px;"><input type="checkbox" class="bulkDay" value="0" style="width:auto; margin-right:6px;">Sun</label>
           </div>
         </div>
-        <div class="field"><label for="bulkStartTime">From</label><select id="bulkStartTime"></select></div>
-        <div class="field"><label for="bulkEndTime">To</label><select id="bulkEndTime"></select></div>
+        <div class="field"><label for="bulkStartTime">Start Time (each 60-min session gets a 15-min gap after it)</label><select id="bulkStartTime"></select></div>
+        <div class="field"><label for="bulkEndTime">Stop Generating After</label><select id="bulkEndTime"></select></div>
         <div class="field"><label for="bulkStartDate">Starting From</label><input type="date" id="bulkStartDate"></div>
         <div class="field"><label for="bulkWeeks">Number of Weeks</label><input type="number" id="bulkWeeks" value="4" min="1" max="12"></div>
         <div class="field"><label for="bulkCapacity">Capacity (leave as 1 unless it's the small group)</label><input type="number" id="bulkCapacity" value="1" min="1"></div>
@@ -216,6 +216,12 @@
             <option value="group_training">4-1 Small Group</option>
             <option value="academy">Academy Training</option>
           </select>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-family:'Inter',sans-serif; font-size:13px;">
+          <label style="text-transform:none; letter-spacing:normal; display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="selectAllSlots" style="width:auto;" onchange="toggleSelectAllSlots()">Select All
+          </label>
+          <button class="btn" id="deleteSelectedBtn" style="padding:8px 16px; font-size:12px; background:transparent; border:1px solid #d97757; color:#d97757;" onclick="deleteSelectedSlots()">Delete Selected</button>
         </div>
         <div id="slotsList"></div>
       </div>
@@ -366,9 +372,10 @@ function generateTimeOptions(){
 }
 generateTimeOptions();
 populateHourRangeOptions();
+populateBulkStartOptions();
 
 function populateHourRangeOptions(){
-  [document.getElementById('bStart'), document.getElementById('bEnd'), document.getElementById('bulkStartTime'), document.getElementById('bulkEndTime')].forEach(select => {
+  [document.getElementById('bStart'), document.getElementById('bEnd'), document.getElementById('bulkEndTime')].forEach(select => {
     let minutes = 6 * 60;
     const endMinutes = 22 * 60;
     while (minutes <= endMinutes) {
@@ -384,6 +391,16 @@ function populateHourRangeOptions(){
       select.appendChild(opt);
       minutes += 75;
     }
+  });
+}
+
+function populateBulkStartOptions(){
+  const select = document.getElementById('bulkStartTime');
+  ['6:00am', '7:00am', '8:00am', '9:00am'].forEach(label => {
+    const opt = document.createElement('option');
+    opt.value = label;
+    opt.textContent = label;
+    select.appendChild(opt);
   });
 }
 
@@ -755,6 +772,7 @@ async function loadSlots(){
   const category = document.getElementById('viewSlotCategory').value;
   const container = document.getElementById('slotsList');
   container.innerHTML = '<p style="opacity:0.6;">Loading…</p>';
+  document.getElementById('selectAllSlots').checked = false;
   try{
     const url = '/api/admin-slots' + (category ? '?category=' + encodeURIComponent(category) : '');
     const res = await fetch(url, { headers: { 'x-admin-password': ADMIN_PASSWORD } });
@@ -769,12 +787,41 @@ async function loadSlots(){
       div.className = 'content-list-item';
       const bookedNote = s.booked_count > 0 ? ` (${s.booked_count}/${s.capacity} booked)` : '';
       const blockedTag = s.blocked ? ' <span style="color:#d97757; text-transform:uppercase; font-size:11px;">Blocked</span>' : '';
-      div.innerHTML = `<span><strong>${s.category}</strong> — ${s.slot_date} · ${s.slot_time}${bookedNote}${blockedTag}</span><span class="danger" onclick="deleteSlot('${s.id}')">Delete</span>`;
+      div.innerHTML = `<span style="display:flex; align-items:center; gap:10px;"><input type="checkbox" class="slotCheckbox" value="${s.id}" style="width:auto;"><strong>${s.category}</strong> — ${s.slot_date} · ${s.slot_time}${bookedNote}${blockedTag}</span><span class="danger" onclick="deleteSlot('${s.id}')">Delete</span>`;
       container.appendChild(div);
     });
   } catch(err){
     container.innerHTML = '<p style="opacity:0.6;">Couldn\'t load slots.</p>';
   }
+}
+
+function toggleSelectAllSlots(){
+  const checked = document.getElementById('selectAllSlots').checked;
+  document.querySelectorAll('.slotCheckbox').forEach(cb => cb.checked = checked);
+}
+
+async function deleteSelectedSlots(){
+  const ids = Array.from(document.querySelectorAll('.slotCheckbox:checked')).map(cb => cb.value);
+  if(!ids.length){ alert('No slots selected.'); return; }
+  if(!confirm(`Delete ${ids.length} selected slot(s)?`)) return;
+  try{
+    const res = await fetch('/api/admin-slots', {
+      method:'DELETE',
+      headers:{'Content-Type':'application/json', 'x-admin-password': ADMIN_PASSWORD},
+      body: JSON.stringify({ ids })
+    });
+    const data = await res.json();
+    if(data.success){
+      let msg = `Deleted ${data.deleted} slot(s).`;
+      if(data.skipped) msg += ` ${data.skipped} skipped (already have bookings).`;
+      alert(msg);
+    } else {
+      alert(data.error || 'Something went wrong.');
+    }
+  } catch(err){
+    alert('Couldn\'t reach the server.');
+  }
+  loadSlots();
 }
 
 async function deleteSlot(id){
