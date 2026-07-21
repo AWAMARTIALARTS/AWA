@@ -249,19 +249,6 @@
       <hr class="rule" style="max-width:400px; margin:60px auto;">
 
       <div class="section-head" style="margin-bottom:24px;">
-        <div class="eyebrow">Live Availability</div>
-        <h2 style="font-size:24px;">View Available Times</h2>
-        <p>Session times are visible now. Slots highlight once a booking is confirmed and paid.</p>
-      </div>
-
-      <div class="avail" id="ptPreviewCalendar">
-        <div class="lock-banner">🔒 Pay below to unlock and select your session</div>
-        <div id="ptPreviewSlots"><p style="text-align:center; font-family:'Inter',sans-serif; opacity:0.6;">Loading availability…</p></div>
-      </div>
-
-      <hr class="rule" style="max-width:400px; margin:60px auto;">
-
-      <div class="section-head" style="margin-bottom:24px;">
         <div class="eyebrow">4-1 Small Group</div>
         <h2 style="font-size:24px;">Join a Group Session</h2>
         <p>Click an open session to join it — you'll pay your £25 immediately to lock your spot.</p>
@@ -281,50 +268,55 @@
 
       <hr class="rule" style="max-width:400px; margin:60px auto;">
 
-      <div class="section-head" style="margin-bottom:24px;">
-        <div class="eyebrow">1-1, 2-1 &amp; 4-Week Block</div>
-        <h2 style="font-size:26px;">Pay Your Deposit to Unlock the Calendar</h2>
-      </div>
-
-      <form class="booking" id="ptForm">
-        <div class="form-grid">
-          <div class="field"><label for="ptName">Full Name</label><input type="text" id="ptName" required></div>
-          <div class="field"><label for="ptEmail">Email</label><input type="email" id="ptEmail" required></div>
-          <div class="field"><label for="ptPhone">Phone</label><input type="tel" id="ptPhone" required></div>
-          <div class="field">
-            <label for="ptType">Session Type</label>
-            <select id="ptType" required>
-              <option value="" disabled selected>Loading options…</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="summary" id="ptSummary" style="display:none;">
-          <div class="summary-row"><span class="muted">Full price</span><span id="ptFee">£0</span></div>
-          <div class="summary-row"><span class="muted">Due at first lesson</span><span id="ptBalance">£0</span></div>
-          <div class="summary-row total"><span>Deposit due now (50%, non-refundable)</span><span id="ptDeposit">£0</span></div>
-        </div>
-
-        <div class="checkfield">
-          <input type="checkbox" id="ptNoShow" required>
-          <label for="ptNoShow"><strong>No-show policy:</strong> I understand that missing a booked session without notice is treated as a no-show, and the full 100% session fee is accepted as chargeable and will be taken from my account for no-shows.</label>
-        </div>
-
-        <button type="submit" class="btn btn-primary" style="width:100%;" id="ptSubmitBtn">Pay Deposit &amp; Unlock Calendar</button>
-        <div class="pay-methods"><span class="chip">Card</span><span class="chip">Apple Pay</span><span class="chip">Pay by Bank</span></div>
-        <div id="ptMsg"></div>
-      </form>
-
-      <div class="avail" id="ptCalendar" style="display:none;">
+      <div id="ptBookingFlow">
         <div class="section-head" style="margin-bottom:24px;">
-          <div class="eyebrow">Booking Unlocked</div>
-          <h2 style="font-size:24px;" id="ptCalendarTitle">Choose Your Session</h2>
+          <div class="eyebrow">1-1, 2-1 &amp; 4-Week Block</div>
+          <h2 style="font-size:26px;">Choose Your Session</h2>
+          <p>Pick your session type, then click your preferred time — you'll pay a 50% deposit to secure it.</p>
         </div>
-        <div id="ptCalendarSlots"></div>
-        <div id="ptCalendarMsg" style="text-align:center; margin-top:16px; font-family:'Inter',sans-serif;"></div>
+
+        <div class="field" style="max-width:420px; margin:0 auto 40px;">
+          <label for="ptType">Session Type</label>
+          <select id="ptType" required>
+            <option value="" disabled selected>Loading options…</option>
+          </select>
+        </div>
+
+        <div class="avail" id="ptLiveCalendar" style="display:none;">
+          <div id="ptLiveSlots"></div>
+          <div id="ptPickMsg" style="text-align:center; margin-top:16px; font-family:'Inter',sans-serif; opacity:0.8;"></div>
+        </div>
+
+        <form class="booking" id="ptForm" style="display:none;">
+          <div class="form-grid">
+            <div class="field"><label for="ptName">Full Name</label><input type="text" id="ptName" required></div>
+            <div class="field"><label for="ptEmail">Email</label><input type="email" id="ptEmail" required></div>
+            <div class="field full"><label for="ptPhone">Phone</label><input type="tel" id="ptPhone" required></div>
+          </div>
+
+          <div class="summary" id="ptSummary" style="display:none;">
+            <div class="summary-row"><span class="muted">Full price</span><span id="ptFee">£0</span></div>
+            <div class="summary-row"><span class="muted">Due at first lesson</span><span id="ptBalance">£0</span></div>
+            <div class="summary-row total"><span>Deposit due now (50%, non-refundable)</span><span id="ptDeposit">£0</span></div>
+          </div>
+
+          <div class="checkfield">
+            <input type="checkbox" id="ptNoShow" required>
+            <label for="ptNoShow"><strong>No-show policy:</strong> I understand that missing a booked session without notice is treated as a no-show, and the full 100% session fee is accepted as chargeable and will be taken from my account for no-shows.</label>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width:100%;" id="ptSubmitBtn">Pay Deposit &amp; Secure Your Session</button>
+          <div class="pay-methods"><span class="chip">Card</span><span class="chip">Apple Pay</span><span class="chip">Pay by Bank</span></div>
+          <div id="ptMsg"></div>
+        </form>
+
+        <div id="ptSuccessBanner" style="display:none; max-width:640px; margin:0 auto; text-align:center; border:1px solid var(--gold); padding:32px; background:rgba(201,162,75,0.06);">
+          <h3 style="font-size:22px; margin-bottom:10px;">You're Booked!</h3>
+          <p style="opacity:0.85;">Your deposit's been received and your session is secured. See you then!</p>
+        </div>
       </div>
 
-      <div class="policy-note"><strong>Deposit policy:</strong> the 50% deposit is non-refundable and secures your personal training booking. The remaining 50% balance is paid directly at your first lesson. Cards are securely saved by Stripe for no-show billing. 4-1 group sessions are charged in full at booking. Session times are visible before booking, but a slot is only confirmed and highlighted once the deposit is received.</div>
+      <div class="policy-note"><strong>Deposit policy:</strong> the 50% deposit is non-refundable and secures your personal training booking. The remaining 50% balance is paid directly at your first lesson. Cards are securely saved by Stripe for no-show billing. 4-1 group sessions are charged in full at booking.</div>
     </div>
   </section>
 </div>
@@ -552,7 +544,6 @@ async function loadPtServiceOptions(){
   }
 }
 loadPtServiceOptions();
-loadPreviewCalendar(['personal_training', 'group_training'], 'ptPreviewSlots');
 
 let selectedGroupSlotId = null;
 
@@ -625,8 +616,13 @@ document.getElementById('groupForm').addEventListener('submit', async function(e
 
 const ptType = document.getElementById('ptType');
 const ptSummary = document.getElementById('ptSummary');
-function updatePtSummary(){
-  const key = ptType.value;
+let ptChosenSlots = [];
+
+function requiredSlotCount(key){
+  return key === 'block4' ? 4 : 1;
+}
+
+function updatePtSummary(key){
   if(!key){ ptSummary.style.display = 'none'; return; }
   const p = PT_PRICES[key];
   const deposit = (p.fee / 2).toFixed(2).replace(/\.00$/, '');
@@ -636,25 +632,96 @@ function updatePtSummary(){
   document.getElementById('ptDeposit').textContent = '£' + deposit;
   ptSummary.style.display = 'block';
 }
-ptType.addEventListener('change', updatePtSummary);
+
+ptType.addEventListener('change', () => {
+  ptChosenSlots = [];
+  document.getElementById('ptForm').style.display = 'none';
+  loadPtLiveCalendar(ptType.value);
+});
+
+async function loadPtLiveCalendar(key){
+  const wrap = document.getElementById('ptLiveCalendar');
+  const container = document.getElementById('ptLiveSlots');
+  const pickMsg = document.getElementById('ptPickMsg');
+  if(!key){ wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  container.innerHTML = '<p style="text-align:center; font-family:\'Inter\',sans-serif; opacity:0.6;">Loading availability…</p>';
+  try{
+    const res = await fetch('/api/availability?category=personal_training');
+    const { slots } = await res.json();
+    if(!slots.length){
+      container.innerHTML = '<p style="text-align:center; font-family:\'Inter\',sans-serif; opacity:0.6;">No sessions scheduled right now — check back soon.</p>';
+      return;
+    }
+    const needed = requiredSlotCount(key);
+    pickMsg.textContent = needed === 4 ? '0/4 sessions selected — one per week.' : 'Click a time to select it.';
+    const byDate = {};
+    slots.forEach(s => { (byDate[s.slot_date] = byDate[s.slot_date] || []).push(s); });
+    container.innerHTML = '';
+    Object.keys(byDate).sort().forEach(date => {
+      const dayWrap = document.createElement('div');
+      dayWrap.className = 'avail-day';
+      dayWrap.innerHTML = `<h3>${formatDateLabel(date)}</h3><div class="slots"></div>`;
+      const slotsEl = dayWrap.querySelector('.slots');
+      byDate[date].forEach(s => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'slot' + (s.full ? ' booked' : '');
+        btn.textContent = s.slot_time;
+        if(s.full){ btn.disabled = true; }
+        else {
+          btn.addEventListener('click', () => {
+            const idx = ptChosenSlots.findIndex(c => c.id === s.id);
+            if(idx >= 0){
+              ptChosenSlots.splice(idx, 1);
+              btn.classList.remove('selected');
+            } else if(ptChosenSlots.length < needed){
+              ptChosenSlots.push(s);
+              btn.classList.add('selected');
+            }
+            if(needed === 4){
+              pickMsg.textContent = `${ptChosenSlots.length}/4 sessions selected — one per week.`;
+            }
+            if(ptChosenSlots.length === needed){
+              document.getElementById('ptForm').style.display = 'block';
+              updatePtSummary(key);
+              if(needed === 4) pickMsg.textContent = '4/4 selected — fill in your details below to secure them.';
+              else pickMsg.textContent = 'Selected — fill in your details below to secure it.';
+            } else {
+              document.getElementById('ptForm').style.display = 'none';
+            }
+          });
+        }
+        slotsEl.appendChild(btn);
+      });
+      container.appendChild(dayWrap);
+    });
+  } catch(err){
+    container.innerHTML = '<p style="text-align:center; font-family:\'Inter\',sans-serif; opacity:0.6;">Couldn\'t load availability. Please refresh.</p>';
+  }
+}
 
 document.getElementById('ptForm').addEventListener('submit', async function(e){
   e.preventDefault();
   const msg = document.getElementById('ptMsg');
   const btn = document.getElementById('ptSubmitBtn');
   const key = ptType.value;
-  if(!key) return;
+  if(!key || !ptChosenSlots.length) return;
   btn.disabled = true; btn.textContent = 'Redirecting to payment…';
   try{
+    const body = {
+      service_type: key,
+      name: document.getElementById('ptName').value,
+      email: document.getElementById('ptEmail').value,
+      phone: document.getElementById('ptPhone').value
+    };
+    if(key === 'block4'){ body.slot_ids = ptChosenSlots.map(s => s.id); }
+    else { body.slot_id = ptChosenSlots[0].id; }
+
     const res = await fetch('/api/create-pt-checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        service_type: key,
-        name: document.getElementById('ptName').value,
-        email: document.getElementById('ptEmail').value,
-        phone: document.getElementById('ptPhone').value
-      })
+      body: JSON.stringify(body)
     });
     const data = await res.json();
     if(data.url){
@@ -662,138 +729,21 @@ document.getElementById('ptForm').addEventListener('submit', async function(e){
     } else {
       msg.style.display = 'block';
       msg.innerHTML = data.error || 'Something went wrong — please try again.';
-      btn.disabled = false; btn.textContent = 'Pay Deposit & Unlock Calendar';
+      btn.disabled = false; btn.textContent = 'Pay Deposit & Secure Your Session';
     }
   } catch(err){
     msg.style.display = 'block';
     msg.innerHTML = 'Couldn\'t reach the booking service — please try again shortly.';
-    btn.disabled = false; btn.textContent = 'Pay Deposit & Unlock Calendar';
+    btn.disabled = false; btn.textContent = 'Pay Deposit & Secure Your Session';
   }
 });
 
-async function unlockPtCalendarIfPaid(){
+function showPtSuccessIfPaid(){
   const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
   if(params.get('paid') !== '1') return;
-  const sessionId = params.get('session_id');
-  const serviceType = params.get('type');
-  if(!sessionId) return;
-
-  const verifyRes = await fetch('/api/verify-pt-payment?session_id=' + encodeURIComponent(sessionId));
-  const verify = await verifyRes.json();
-  if(!verify.valid) return;
-
-  document.getElementById('ptPreviewCalendar').style.display = 'none';
-  document.getElementById('ptCalendar').style.display = 'block';
-  const availRes = await fetch('/api/availability?category=personal_training');
-  const { slots } = await availRes.json();
-
-  if(serviceType === 'block4'){
-    document.getElementById('ptCalendarTitle').textContent = 'Choose 4 Sessions — One Per Week';
-    renderBlockPicker(slots, verify.booking_id);
-  } else {
-    document.getElementById('ptCalendarTitle').textContent = 'Choose Your Session Time';
-    renderSinglePicker(slots, verify.booking_id);
-  }
-}
-
-function renderSinglePicker(slots, bookingId){
-  const container = document.getElementById('ptCalendarSlots');
-  container.innerHTML = '';
-  const byDate = {};
-  slots.forEach(s => { (byDate[s.slot_date] = byDate[s.slot_date] || []).push(s); });
-  Object.keys(byDate).sort().forEach(date => {
-    const dayWrap = document.createElement('div');
-    dayWrap.className = 'avail-day';
-    dayWrap.innerHTML = `<h3>${formatDateLabel(date)}</h3><div class="slots"></div>`;
-    const slotsEl = dayWrap.querySelector('.slots');
-    byDate[date].forEach(s => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'slot' + (s.full ? ' booked' : '');
-      btn.textContent = s.slot_time;
-      if(s.full){ btn.disabled = true; }
-      else {
-        btn.addEventListener('click', async () => {
-          const bookRes = await fetch('/api/book-pt-slot', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ booking_id: bookingId, slot_id: s.id })
-          });
-          const bookData = await bookRes.json();
-          const msgEl = document.getElementById('ptCalendarMsg');
-          if(bookData.success){
-            btn.classList.remove('selected');
-            btn.classList.add('confirmed');
-            btn.textContent += ' ✓ Confirmed';
-            document.querySelectorAll('#ptCalendarSlots .slot').forEach(el => el.disabled = true);
-            msgEl.textContent = 'Your session is booked. See you then!';
-          } else {
-            msgEl.textContent = bookData.error || 'Something went wrong.';
-          }
-        });
-      }
-      slotsEl.appendChild(btn);
-    });
-    container.appendChild(dayWrap);
-  });
-}
-
-function renderBlockPicker(slots, bookingId){
-  const container = document.getElementById('ptCalendarSlots');
-  container.innerHTML = '';
-  const chosen = [];
-  const byDate = {};
-  slots.forEach(s => { (byDate[s.slot_date] = byDate[s.slot_date] || []).push(s); });
-
-  Object.keys(byDate).sort().forEach(date => {
-    const dayWrap = document.createElement('div');
-    dayWrap.className = 'avail-day';
-    dayWrap.innerHTML = `<h3>${formatDateLabel(date)}</h3><div class="slots"></div>`;
-    const slotsEl = dayWrap.querySelector('.slots');
-    byDate[date].forEach(s => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'slot' + (s.full ? ' booked' : '');
-      btn.textContent = s.slot_time;
-      if(s.full){ btn.disabled = true; }
-      else {
-        btn.addEventListener('click', () => {
-          const idx = chosen.findIndex(c => c.id === s.id);
-          if(idx >= 0){ chosen.splice(idx, 1); btn.classList.remove('selected'); }
-          else if(chosen.length < 4){ chosen.push(s); btn.classList.add('selected'); }
-          document.getElementById('ptCalendarMsg').textContent = `${chosen.length}/4 sessions selected — one per week.`;
-        });
-      }
-      slotsEl.appendChild(btn);
-    });
-    container.appendChild(dayWrap);
-  });
-
-  const confirmBtn = document.createElement('button');
-  confirmBtn.className = 'btn btn-primary';
-  confirmBtn.style.cssText = 'display:block; margin:24px auto 0;';
-  confirmBtn.textContent = 'Confirm My 4 Weekly Sessions';
-  confirmBtn.addEventListener('click', async () => {
-    const msgEl = document.getElementById('ptCalendarMsg');
-    if(chosen.length !== 4){ msgEl.textContent = 'Please choose exactly 4 sessions, one per week.'; return; }
-    const bookRes = await fetch('/api/book-pt-slot', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ booking_id: bookingId, slot_ids: chosen.map(c => c.id) })
-    });
-    const bookData = await bookRes.json();
-    if(bookData.success){
-      msgEl.textContent = 'Your 4-week block is booked. See you then!';
-      document.querySelectorAll('#ptCalendarSlots .slot.selected').forEach(el => {
-        el.classList.remove('selected');
-        el.classList.add('confirmed');
-        el.disabled = true;
-      });
-      document.querySelectorAll('#ptCalendarSlots .slot').forEach(el => el.disabled = true);
-      confirmBtn.disabled = true;
-    } else {
-      msgEl.textContent = bookData.error || 'Something went wrong.';
-    }
-  });
-  container.appendChild(confirmBtn);
+  document.getElementById('ptBookingFlow').style.display = 'none';
+  document.getElementById('groupAvailability').style.display = 'none';
+  document.getElementById('ptSuccessBanner').style.display = 'block';
 }
 
 async function loadAcademyServiceOptions(){
@@ -993,7 +943,7 @@ fetch('/api/membership-status')
   const page = hash.split('?')[0];
   if(page === 'pt' || page === 'ac' || page === 'cf'){ showPage(page); } else { showPage('home'); }
   if(page === 'ac'){ unlockAcademyIfPaid(); }
-  if(page === 'pt'){ unlockPtCalendarIfPaid(); }
+  if(page === 'pt'){ showPtSuccessIfPaid(); }
 })();
 </script>
 
