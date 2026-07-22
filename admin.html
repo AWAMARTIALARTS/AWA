@@ -30,6 +30,9 @@
   .tabs button.active{ border-color:var(--gold); color:var(--gold-bright); }
   .danger{ color:#d97757; cursor:pointer; font-family:'Inter', sans-serif; font-size:13px; }
   .private-text{ white-space:pre-line; opacity:0.9; }
+  .subnav{ display:flex; gap:8px; margin-bottom:24px; flex-wrap:wrap; }
+  .subnav button{ font-family:'Inter', sans-serif; font-size:12.5px; padding:8px 14px; background:none; border:1px solid var(--line); color:var(--parchment); cursor:pointer; opacity:0.85; border-radius:2px; }
+  .subnav button.active{ border-color:var(--gold); color:var(--gold-bright); opacity:1; background:rgba(201,162,75,0.08); }
 </style>
 </head>
 <body>
@@ -77,6 +80,7 @@
       <button onclick="showAdminTab('clients')">All Clients</button>
       <button onclick="showAdminTab('clientsessions')">Client Sessions</button>
       <button onclick="showAdminTab('pricing')">Manage Prices</button>
+      <button onclick="showAdminTab('skills')">Skills Portfolio</button>
       <button onclick="showAdminTab('private')">Mission &amp; Syllabus (Private)</button>
     </div>
 
@@ -372,6 +376,15 @@
       </div>
     </template>
 
+    <div id="tab-skills" style="display:none;">
+      <div class="card">
+        <h3 style="font-size:16px; margin-bottom:8px;">Skills Portfolio</h3>
+        <p style="font-family:'Inter',sans-serif; font-size:13.5px; opacity:0.7;">Private notes for each level (1–5) across every skill category. Admin-only — never shown on the public site.</p>
+      </div>
+      <div class="subnav" id="skillSubnav"></div>
+      <div id="skillBoxes"><p style="opacity:0.6;">Loading…</p></div>
+    </div>
+
     <div id="tab-private" style="display:none;">
       <div id="privateContentBoxes"><p style="opacity:0.6;">Loading…</p></div>
     </div>
@@ -628,6 +641,7 @@ function showAdminTab(tab){
   document.getElementById('tab-clients').style.display = tab === 'clients' ? 'block' : 'none';
   document.getElementById('tab-clientsessions').style.display = tab === 'clientsessions' ? 'block' : 'none';
   document.getElementById('tab-pricing').style.display = tab === 'pricing' ? 'block' : 'none';
+  document.getElementById('tab-skills').style.display = tab === 'skills' ? 'block' : 'none';
   document.getElementById('tab-private').style.display = tab === 'private' ? 'block' : 'none';
   if(tab === 'submissions') loadSubmissions();
   if(tab === 'calendar') loadSlots();
@@ -635,6 +649,7 @@ function showAdminTab(tab){
   if(tab === 'private') loadPrivateContent();
   if(tab === 'clients') loadClients();
   if(tab === 'pricing') loadPricing();
+  if(tab === 'skills') { renderSkillSubnav(); loadSkillCategory(currentSkillCategory); }
 }
 
 const PRIVATE_BOXES = [
@@ -758,6 +773,90 @@ async function loadPricing(){
     });
   } catch(err){
     container.innerHTML = '<p style="opacity:0.6;">Couldn\'t load pricing.</p>';
+  }
+}
+
+const SKILL_CATEGORIES = [
+  { key: 'muaythai', label: 'Muay Thai Combinations', prefix: 'skill_muaythai' },
+  { key: 'boxing', label: 'Boxing Combinations', prefix: 'skill_boxing' },
+  { key: 'blocking', label: 'Blocking Combinations', prefix: 'skill_blocking' },
+  { key: 'counters', label: 'Block Counters', prefix: 'skill_counters' },
+  { key: 'punchmove', label: 'Punch and Move', prefix: 'skill_punchmove' },
+  { key: 'headmovement', label: 'Combat Head Movement', prefix: 'skill_headmovement' },
+];
+let currentSkillCategory = SKILL_CATEGORIES[0].key;
+
+function renderSkillSubnav(){
+  const nav = document.getElementById('skillSubnav');
+  nav.innerHTML = '';
+  SKILL_CATEGORIES.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.textContent = cat.label;
+    btn.className = cat.key === currentSkillCategory ? 'active' : '';
+    btn.addEventListener('click', () => {
+      currentSkillCategory = cat.key;
+      renderSkillSubnav();
+      loadSkillCategory(cat.key);
+    });
+    nav.appendChild(btn);
+  });
+}
+
+async function loadSkillCategory(catKey){
+  const cat = SKILL_CATEGORIES.find(c => c.key === catKey);
+  const container = document.getElementById('skillBoxes');
+  const template = document.getElementById('privateBoxTemplate');
+  container.innerHTML = '<p style="opacity:0.6;">Loading…</p>';
+  try{
+    const res = await fetch('/api/admin-private-content', { headers: { 'x-admin-password': ADMIN_PASSWORD } });
+    const data = await res.json();
+    container.innerHTML = '';
+    for(let level = 1; level <= 5; level++){
+      const key = `${cat.prefix}_${level}`;
+      const el = template.content.cloneNode(true);
+      const cardDiv = el.querySelector('.card');
+      cardDiv.dataset.key = key;
+      el.querySelector('[data-title]').textContent = `${cat.label} — Level ${level}`;
+      el.querySelector('[data-display]').textContent = data.content[key] || '';
+      el.querySelector('[data-textarea]').value = data.content[key] || '';
+
+      el.querySelector('[data-edit-icon]').addEventListener('click', () => {
+        cardDiv.querySelector('[data-display]').style.display = 'none';
+        cardDiv.querySelector('[data-edit-area]').style.display = 'block';
+      });
+      el.querySelector('[data-cancel]').addEventListener('click', () => {
+        cardDiv.querySelector('[data-textarea]').value = cardDiv.querySelector('[data-display]').textContent;
+        cardDiv.querySelector('[data-display]').style.display = 'block';
+        cardDiv.querySelector('[data-edit-area]').style.display = 'none';
+      });
+      el.querySelector('[data-save]').addEventListener('click', async () => {
+        const newValue = cardDiv.querySelector('[data-textarea]').value;
+        const saveBtn = cardDiv.querySelector('[data-save]');
+        saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+        try{
+          const saveRes = await fetch('/api/admin-private-content', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json', 'x-admin-password': ADMIN_PASSWORD},
+            body: JSON.stringify({ key: key, value: newValue })
+          });
+          const saveData = await saveRes.json();
+          if(saveData.success){
+            cardDiv.querySelector('[data-display]').textContent = newValue;
+            cardDiv.querySelector('[data-display]').style.display = 'block';
+            cardDiv.querySelector('[data-edit-area]').style.display = 'none';
+          } else {
+            alert(saveData.error || 'Something went wrong.');
+          }
+        } catch(err){
+          alert('Couldn\'t reach the server.');
+        }
+        saveBtn.disabled = false; saveBtn.textContent = 'Save';
+      });
+
+      container.appendChild(el);
+    }
+  } catch(err){
+    container.innerHTML = '<p style="opacity:0.6;">Couldn\'t load skills content.</p>';
   }
 }
 
@@ -1164,7 +1263,7 @@ async function loadClients(){
 function viewClientSessions(email){
   document.getElementById('csEmail').value = email;
   document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tabs button')[document.querySelectorAll('.tabs button').length - 3].classList.add('active');
+  document.querySelectorAll('.tabs button')[document.querySelectorAll('.tabs button').length - 4].classList.add('active');
   document.getElementById('tab-clients').style.display = 'none';
   document.getElementById('tab-clientsessions').style.display = 'block';
   document.getElementById('csSearchBtn').click();
