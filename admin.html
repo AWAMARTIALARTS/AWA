@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin — All Walks Academy</title>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --black:#0b0a08; --black-2:#141210; --gold:#c9a24b; --gold-bright:#e8c874;
@@ -72,6 +72,9 @@
       <button onclick="showAdminTab('calendar')">Manage Calendar</button>
       <button onclick="showAdminTab('timetable')">Academy Timetable</button>
       <button onclick="showAdminTab('submissions')">Video Submissions</button>
+      <button onclick="showAdminTab('weeklycal')">Weekly Calendar</button>
+      <button onclick="showAdminTab('monthlycal')">Monthly Calendar</button>
+      <button onclick="showAdminTab('clients')">All Clients</button>
       <button onclick="showAdminTab('clientsessions')">Client Sessions</button>
       <button onclick="showAdminTab('private')">Mission &amp; Syllabus (Private)</button>
     </div>
@@ -178,7 +181,7 @@
             <label style="text-transform:none; letter-spacing:normal; font-size:14px;"><input type="checkbox" class="bulkDay" value="0" style="width:auto; margin-right:6px;">Sun</label>
           </div>
         </div>
-        <div class="field"><label for="bulkStartTime">Start Time (each 60-min session gets a 15-min gap after it)</label><select id="bulkStartTime"></select></div>
+        <div class="field"><label for="bulkStartTime">Start Time (any hour — each 60-min session gets a 15-min gap after it)</label><select id="bulkStartTime"></select></div>
         <div class="field"><label for="bulkEndTime">Stop Generating After</label><select id="bulkEndTime"></select></div>
         <div class="field"><label for="bulkStartDate">Starting From</label><input type="date" id="bulkStartDate"></div>
         <div class="field"><label for="bulkWeeks">Number of Weeks</label><input type="number" id="bulkWeeks" value="4" min="1" max="12"></div>
@@ -263,6 +266,53 @@
       <div class="card">
         <h3 style="font-size:16px; margin-bottom:16px;">Pending Review</h3>
         <div id="submissionsList"></div>
+      </div>
+    </div>
+
+    <div id="tab-weeklycal" style="display:none;">
+      <div class="card">
+        <h3 style="font-size:16px; margin-bottom:16px;">Weekly Calendar</h3>
+        <p style="font-family:'Inter',sans-serif; font-size:13.5px; opacity:0.7; margin-bottom:16px;">See a full week of slots and who's booked into each one.</p>
+        <div class="field"><label for="wcStartDate">Week Starting</label><input type="date" id="wcStartDate"></div>
+        <div class="field">
+          <label for="wcCategory">Page</label>
+          <select id="wcCategory">
+            <option value="">All Pages</option>
+            <option value="personal_training">Personal Training</option>
+            <option value="group_training">4-1 Small Group</option>
+            <option value="academy">Academy Training</option>
+          </select>
+        </div>
+        <button class="btn" id="wcLoadBtn">Load Week</button>
+        <div id="wcResults" style="margin-top:20px;"></div>
+      </div>
+    </div>
+
+    <div id="tab-monthlycal" style="display:none;">
+      <div class="card">
+        <h3 style="font-size:16px; margin-bottom:16px;">Monthly Calendar</h3>
+        <p style="font-family:'Inter',sans-serif; font-size:13.5px; opacity:0.7; margin-bottom:16px;">A month at a glance — click any day to see who's booked in.</p>
+        <div class="field"><label for="mcMonth">Month</label><input type="month" id="mcMonth"></div>
+        <div class="field">
+          <label for="mcCategory">Page</label>
+          <select id="mcCategory">
+            <option value="">All Pages</option>
+            <option value="personal_training">Personal Training</option>
+            <option value="group_training">4-1 Small Group</option>
+            <option value="academy">Academy Training</option>
+          </select>
+        </div>
+        <button class="btn" id="mcLoadBtn">Load Month</button>
+        <div id="mcGrid" style="margin-top:20px;"></div>
+        <div id="mcDayDetail" style="margin-top:20px;"></div>
+      </div>
+    </div>
+
+    <div id="tab-clients" style="display:none;">
+      <div class="card">
+        <h3 style="font-size:16px; margin-bottom:16px;">All Clients</h3>
+        <p style="font-family:'Inter',sans-serif; font-size:13.5px; opacity:0.7; margin-bottom:16px;">Every client who's ever booked, with total sessions and completed count.</p>
+        <div id="clientsList"><p style="opacity:0.6;">Loading…</p></div>
       </div>
     </div>
 
@@ -407,12 +457,19 @@ function populateHourRangeOptions(){
 
 function populateBulkStartOptions(){
   const select = document.getElementById('bulkStartTime');
-  ['6:00am', '7:00am', '8:00am', '9:00am'].forEach(label => {
+  let minutes = 0;
+  while (minutes < 24 * 60) {
+    let h = Math.floor(minutes / 60);
+    const ampm = h >= 12 ? 'pm' : 'am';
+    let h12 = h % 12;
+    if (h12 === 0) h12 = 12;
+    const label = `${h12}:00${ampm}`;
     const opt = document.createElement('option');
     opt.value = label;
     opt.textContent = label;
     select.appendChild(opt);
-  });
+    minutes += 60;
+  }
 }
 
 document.getElementById('bulkAddBtn').addEventListener('click', async () => {
@@ -520,12 +577,16 @@ function showAdminTab(tab){
   document.getElementById('tab-calendar').style.display = tab === 'calendar' ? 'block' : 'none';
   document.getElementById('tab-timetable').style.display = tab === 'timetable' ? 'block' : 'none';
   document.getElementById('tab-submissions').style.display = tab === 'submissions' ? 'block' : 'none';
+  document.getElementById('tab-weeklycal').style.display = tab === 'weeklycal' ? 'block' : 'none';
+  document.getElementById('tab-monthlycal').style.display = tab === 'monthlycal' ? 'block' : 'none';
+  document.getElementById('tab-clients').style.display = tab === 'clients' ? 'block' : 'none';
   document.getElementById('tab-clientsessions').style.display = tab === 'clientsessions' ? 'block' : 'none';
   document.getElementById('tab-private').style.display = tab === 'private' ? 'block' : 'none';
   if(tab === 'submissions') loadSubmissions();
   if(tab === 'calendar') loadSlots();
   if(tab === 'timetable') loadTimetable();
   if(tab === 'private') loadPrivateContent();
+  if(tab === 'clients') loadClients();
 }
 
 const PRIVATE_BOXES = [
@@ -846,6 +907,147 @@ async function deleteSlot(id){
   const data = await res.json();
   if(!data.success){ alert(data.error || 'Couldn\'t delete that slot.'); }
   loadSlots();
+}
+
+let MC_DAY_DATA = {};
+
+document.getElementById('mcLoadBtn').addEventListener('click', async () => {
+  const monthValue = document.getElementById('mcMonth').value; // "YYYY-MM"
+  const category = document.getElementById('mcCategory').value;
+  const grid = document.getElementById('mcGrid');
+  const detail = document.getElementById('mcDayDetail');
+  detail.innerHTML = '';
+  if(!monthValue){ grid.innerHTML = '<p style="opacity:0.6;">Pick a month first.</p>'; return; }
+  grid.innerHTML = '<p style="opacity:0.6;">Loading…</p>';
+
+  const [year, month] = monthValue.split('-').map(Number);
+  const startDate = `${year}-${month.toString().padStart(2,'0')}-01`;
+  const lastDay = new Date(year, month, 0).getDate();
+  const endDate = `${year}-${month.toString().padStart(2,'0')}-${lastDay.toString().padStart(2,'0')}`;
+
+  try{
+    const url = '/api/admin-weekly-calendar?start_date=' + startDate + '&end_date=' + endDate + (category ? '&category=' + category : '');
+    const res = await fetch(url, { headers: { 'x-admin-password': ADMIN_PASSWORD } });
+    const data = await res.json();
+
+    MC_DAY_DATA = {};
+    (data.slots || []).forEach(s => {
+      if(!MC_DAY_DATA[s.slot_date]) MC_DAY_DATA[s.slot_date] = { slots: 0, booked: 0, items: [] };
+      MC_DAY_DATA[s.slot_date].slots += 1;
+      MC_DAY_DATA[s.slot_date].booked += s.customers.length;
+      MC_DAY_DATA[s.slot_date].items.push(s);
+    });
+
+    const firstWeekday = new Date(year, month - 1, 1).getDay(); // 0=Sun
+    const cells = [];
+    for(let i = 0; i < firstWeekday; i++) cells.push(null);
+    for(let d = 1; d <= lastDay; d++) cells.push(d);
+
+    let html = '<div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:6px; font-family:\'Inter\',sans-serif; font-size:12px;">';
+    ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => {
+      html += `<div style="text-align:center; opacity:0.6; padding:6px;">${d}</div>`;
+    });
+    cells.forEach(d => {
+      if(d === null){ html += '<div></div>'; return; }
+      const dateStr = `${year}-${month.toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`;
+      const info = MC_DAY_DATA[dateStr];
+      const hasSlots = info && info.slots > 0;
+      html += `<div onclick="showMonthDay('${dateStr}')" style="border:1px solid var(--line); ${hasSlots ? 'border-color:var(--gold); cursor:pointer;' : ''} padding:8px; min-height:60px; text-align:center;">
+        <div style="color:var(--gold-bright); font-weight:600;">${d}</div>
+        ${hasSlots ? `<div style="margin-top:4px; opacity:0.8;">${info.booked}/${info.slots}</div>` : ''}
+      </div>`;
+    });
+    html += '</div>';
+    grid.innerHTML = html;
+  } catch(err){
+    grid.innerHTML = '<p style="opacity:0.6;">Couldn\'t load the month.</p>';
+  }
+});
+
+function showMonthDay(dateStr){
+  const detail = document.getElementById('mcDayDetail');
+  const info = MC_DAY_DATA[dateStr];
+  if(!info || !info.items.length){ detail.innerHTML = '<p style="opacity:0.6;">No slots that day.</p>'; return; }
+  const dayLabel = new Date(dateStr + 'T00:00:00').toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric' });
+  let html = `<div class="eyebrow" style="margin-bottom:8px;">${dayLabel}</div>`;
+  info.items.forEach(s => {
+    const names = s.customers.length ? s.customers.map(c => c.name).join(', ') : '<span style="opacity:0.5;">— empty —</span>';
+    const blockedTag = s.blocked ? ' <span style="color:#d97757; text-transform:uppercase; font-size:11px;">Blocked</span>' : '';
+    html += `<div class="content-list-item"><span><strong>${s.slot_time}</strong> (${s.category}) — ${names}${blockedTag}</span></div>`;
+  });
+  detail.innerHTML = html;
+}
+
+document.getElementById('wcLoadBtn').addEventListener('click', async () => {
+  const startDate = document.getElementById('wcStartDate').value;
+  const category = document.getElementById('wcCategory').value;
+  const container = document.getElementById('wcResults');
+  if(!startDate){ container.innerHTML = '<p style="opacity:0.6;">Pick a week start date first.</p>'; return; }
+  container.innerHTML = '<p style="opacity:0.6;">Loading…</p>';
+  try{
+    const url = '/api/admin-weekly-calendar?start_date=' + encodeURIComponent(startDate) + (category ? '&category=' + category : '');
+    const res = await fetch(url, { headers: { 'x-admin-password': ADMIN_PASSWORD } });
+    const data = await res.json();
+    if(!data.slots || !data.slots.length){
+      container.innerHTML = '<p style="opacity:0.6;">No slots in this week.</p>';
+      return;
+    }
+    const byDate = {};
+    data.slots.forEach(s => { (byDate[s.slot_date] = byDate[s.slot_date] || []).push(s); });
+    container.innerHTML = '';
+    Object.keys(byDate).sort().forEach(date => {
+      const dayDiv = document.createElement('div');
+      dayDiv.style.cssText = 'margin-bottom:20px;';
+      const dayLabel = new Date(date + 'T00:00:00').toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric' });
+      let dayHtml = `<div class="eyebrow" style="margin-bottom:8px;">${dayLabel}</div>`;
+      byDate[date].forEach(s => {
+        const names = s.customers.length ? s.customers.map(c => c.name).join(', ') : '<span style="opacity:0.5;">— empty —</span>';
+        const blockedTag = s.blocked ? ' <span style="color:#d97757; text-transform:uppercase; font-size:11px;">Blocked</span>' : '';
+        dayHtml += `<div class="content-list-item"><span><strong>${s.slot_time}</strong> (${s.category}) — ${names}${blockedTag}</span></div>`;
+      });
+      dayDiv.innerHTML = dayHtml;
+      container.appendChild(dayDiv);
+    });
+  } catch(err){
+    container.innerHTML = '<p style="opacity:0.6;">Couldn\'t load the week.</p>';
+  }
+});
+
+async function loadClients(){
+  const container = document.getElementById('clientsList');
+  container.innerHTML = '<p style="opacity:0.6;">Loading…</p>';
+  try{
+    const res = await fetch('/api/admin-clients', { headers: { 'x-admin-password': ADMIN_PASSWORD } });
+    const data = await res.json();
+    if(!data.clients || !data.clients.length){
+      container.innerHTML = '<p style="opacity:0.6;">No clients yet.</p>';
+      return;
+    }
+    container.innerHTML = '';
+    data.clients.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'content-list-item';
+      div.innerHTML = `
+        <span>
+          <strong>${c.name || 'Unknown'}</strong> — ${c.email}${c.phone ? ' · ' + c.phone : ''}
+          <span style="font-family:'Inter',sans-serif; font-size:12px; opacity:0.6; margin-left:8px;">${c.totalBookings} booking(s), ${c.completedSessions} completed</span>
+        </span>
+        <span class="danger" style="color:var(--gold);" onclick="viewClientSessions('${c.email}')">View Sessions</span>
+      `;
+      container.appendChild(div);
+    });
+  } catch(err){
+    container.innerHTML = '<p style="opacity:0.6;">Couldn\'t load clients.</p>';
+  }
+}
+
+function viewClientSessions(email){
+  document.getElementById('csEmail').value = email;
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tabs button')[document.querySelectorAll('.tabs button').length - 2].classList.add('active');
+  document.getElementById('tab-clients').style.display = 'none';
+  document.getElementById('tab-clientsessions').style.display = 'block';
+  document.getElementById('csSearchBtn').click();
 }
 
 document.getElementById('csSearchBtn').addEventListener('click', async () => {
