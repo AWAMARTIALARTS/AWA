@@ -292,7 +292,27 @@
       <div class="card">
         <h3 style="font-size:16px; margin-bottom:16px;">Monthly Calendar</h3>
         <p style="font-family:'Inter',sans-serif; font-size:13.5px; opacity:0.7; margin-bottom:16px;">A month at a glance — click any day to see who's booked in.</p>
-        <div class="field"><label for="mcMonth">Month</label><input type="month" id="mcMonth"></div>
+        <div class="field">
+          <label for="mcYear">Year</label>
+          <select id="mcYear"></select>
+        </div>
+        <div class="field">
+          <label for="mcMonthSelect">Month</label>
+          <select id="mcMonthSelect">
+            <option value="1">January</option>
+            <option value="2">February</option>
+            <option value="3">March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+        </div>
         <div class="field">
           <label for="mcCategory">Page</label>
           <select id="mcCategory">
@@ -911,16 +931,29 @@ async function deleteSlot(id){
 
 let MC_DAY_DATA = {};
 
+function populateMcYearOptions(){
+  const select = document.getElementById('mcYear');
+  const currentYear = new Date().getFullYear();
+  for(let y = currentYear - 1; y <= currentYear + 2; y++){
+    const opt = document.createElement('option');
+    opt.value = y;
+    opt.textContent = y;
+    if(y === currentYear) opt.selected = true;
+    select.appendChild(opt);
+  }
+  document.getElementById('mcMonthSelect').value = (new Date().getMonth() + 1).toString();
+}
+populateMcYearOptions();
+
 document.getElementById('mcLoadBtn').addEventListener('click', async () => {
-  const monthValue = document.getElementById('mcMonth').value; // "YYYY-MM"
+  const year = parseInt(document.getElementById('mcYear').value, 10);
+  const month = parseInt(document.getElementById('mcMonthSelect').value, 10);
   const category = document.getElementById('mcCategory').value;
   const grid = document.getElementById('mcGrid');
   const detail = document.getElementById('mcDayDetail');
   detail.innerHTML = '';
-  if(!monthValue){ grid.innerHTML = '<p style="opacity:0.6;">Pick a month first.</p>'; return; }
   grid.innerHTML = '<p style="opacity:0.6;">Loading…</p>';
 
-  const [year, month] = monthValue.split('-').map(Number);
   const startDate = `${year}-${month.toString().padStart(2,'0')}-01`;
   const lastDay = new Date(year, month, 0).getDate();
   const endDate = `${year}-${month.toString().padStart(2,'0')}-${lastDay.toString().padStart(2,'0')}`;
