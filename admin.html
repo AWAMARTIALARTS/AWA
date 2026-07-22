@@ -76,6 +76,7 @@
       <button onclick="showAdminTab('monthlycal')">Monthly Calendar</button>
       <button onclick="showAdminTab('clients')">All Clients</button>
       <button onclick="showAdminTab('clientsessions')">Client Sessions</button>
+      <button onclick="showAdminTab('pricing')">Manage Prices</button>
       <button onclick="showAdminTab('private')">Mission &amp; Syllabus (Private)</button>
     </div>
 
@@ -346,6 +347,31 @@
       </div>
     </div>
 
+    <div id="tab-pricing" style="display:none;">
+      <div class="card">
+        <h3 style="font-size:16px; margin-bottom:16px;">Manage Prices</h3>
+        <p style="font-family:'Inter',sans-serif; font-size:13.5px; opacity:0.7; margin-bottom:16px;">Edit the title and price for any service. Changes appear on the public site immediately.</p>
+      </div>
+      <div id="pricingBoxes"><p style="opacity:0.6;">Loading…</p></div>
+    </div>
+    <template id="pricingBoxTemplate">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h3 style="font-size:18px; margin:0;" data-title></h3>
+          <span style="cursor:pointer; font-size:18px;" data-edit-icon title="Edit">✏️</span>
+        </div>
+        <p data-display style="font-family:'Inter',sans-serif; font-size:20px; color:var(--gold-bright);"></p>
+        <div data-edit-area style="display:none;">
+          <div class="field"><label>Title</label><input type="text" data-label-input></div>
+          <div class="field"><label>Price (£)</label><input type="number" step="0.01" data-fee-input></div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn" data-save style="padding:8px 16px; font-size:12px;">Save</button>
+            <button class="btn" data-cancel style="padding:8px 16px; font-size:12px; background:transparent; border:1px solid var(--line); color:var(--parchment);">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </template>
+
     <div id="tab-private" style="display:none;">
       <div id="privateContentBoxes"><p style="opacity:0.6;">Loading…</p></div>
     </div>
@@ -601,12 +627,14 @@ function showAdminTab(tab){
   document.getElementById('tab-monthlycal').style.display = tab === 'monthlycal' ? 'block' : 'none';
   document.getElementById('tab-clients').style.display = tab === 'clients' ? 'block' : 'none';
   document.getElementById('tab-clientsessions').style.display = tab === 'clientsessions' ? 'block' : 'none';
+  document.getElementById('tab-pricing').style.display = tab === 'pricing' ? 'block' : 'none';
   document.getElementById('tab-private').style.display = tab === 'private' ? 'block' : 'none';
   if(tab === 'submissions') loadSubmissions();
   if(tab === 'calendar') loadSlots();
   if(tab === 'timetable') loadTimetable();
   if(tab === 'private') loadPrivateContent();
   if(tab === 'clients') loadClients();
+  if(tab === 'pricing') loadPricing();
 }
 
 const PRIVATE_BOXES = [
@@ -671,6 +699,65 @@ async function loadPrivateContent(){
     });
   } catch(err){
     container.innerHTML = '<p style="opacity:0.6;">Couldn\'t load private content.</p>';
+  }
+}
+
+async function loadPricing(){
+  const container = document.getElementById('pricingBoxes');
+  const template = document.getElementById('pricingBoxTemplate');
+  try{
+    const res = await fetch('/api/admin-services', { headers: { 'x-admin-password': ADMIN_PASSWORD } });
+    const data = await res.json();
+    container.innerHTML = '';
+    (data.services || []).forEach(svc => {
+      const el = template.content.cloneNode(true);
+      const cardDiv = el.querySelector('.card');
+      el.querySelector('[data-title]').textContent = svc.label + ' (' + svc.category + ')';
+      el.querySelector('[data-display]').textContent = '£' + svc.fee + (svc.mode === 'subscription' ? '/month' : '');
+      el.querySelector('[data-label-input]').value = svc.label;
+      el.querySelector('[data-fee-input]').value = svc.fee;
+
+      el.querySelector('[data-edit-icon]').addEventListener('click', () => {
+        cardDiv.querySelector('[data-display]').style.display = 'none';
+        cardDiv.querySelector('[data-edit-area]').style.display = 'block';
+      });
+      el.querySelector('[data-cancel]').addEventListener('click', () => {
+        cardDiv.querySelector('[data-label-input]').value = svc.label;
+        cardDiv.querySelector('[data-fee-input]').value = svc.fee;
+        cardDiv.querySelector('[data-display]').style.display = 'block';
+        cardDiv.querySelector('[data-edit-area]').style.display = 'none';
+      });
+      el.querySelector('[data-save]').addEventListener('click', async () => {
+        const newLabel = cardDiv.querySelector('[data-label-input]').value;
+        const newFee = parseFloat(cardDiv.querySelector('[data-fee-input]').value);
+        const saveBtn = cardDiv.querySelector('[data-save]');
+        saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+        try{
+          const saveRes = await fetch('/api/admin-services', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json', 'x-admin-password': ADMIN_PASSWORD},
+            body: JSON.stringify({ key: svc.key, label: newLabel, fee: newFee })
+          });
+          const saveData = await saveRes.json();
+          if(saveData.success){
+            svc.label = newLabel; svc.fee = newFee;
+            cardDiv.querySelector('[data-title]').textContent = newLabel + ' (' + svc.category + ')';
+            cardDiv.querySelector('[data-display]').textContent = '£' + newFee + (svc.mode === 'subscription' ? '/month' : '');
+            cardDiv.querySelector('[data-display]').style.display = 'block';
+            cardDiv.querySelector('[data-edit-area]').style.display = 'none';
+          } else {
+            alert(saveData.error || 'Something went wrong.');
+          }
+        } catch(err){
+          alert('Couldn\'t reach the server.');
+        }
+        saveBtn.disabled = false; saveBtn.textContent = 'Save';
+      });
+
+      container.appendChild(el);
+    });
+  } catch(err){
+    container.innerHTML = '<p style="opacity:0.6;">Couldn\'t load pricing.</p>';
   }
 }
 
@@ -1077,7 +1164,7 @@ async function loadClients(){
 function viewClientSessions(email){
   document.getElementById('csEmail').value = email;
   document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tabs button')[document.querySelectorAll('.tabs button').length - 2].classList.add('active');
+  document.querySelectorAll('.tabs button')[document.querySelectorAll('.tabs button').length - 3].classList.add('active');
   document.getElementById('tab-clients').style.display = 'none';
   document.getElementById('tab-clientsessions').style.display = 'block';
   document.getElementById('csSearchBtn').click();
@@ -1100,16 +1187,20 @@ document.getElementById('csSearchBtn').addEventListener('click', async () => {
     let html = `<div style="font-family:'Inter',sans-serif; font-size:16px; margin-bottom:16px;"><strong style="color:var(--gold-bright);">${data.completedCount}</strong> completed session(s)</div>`;
     data.bookings.forEach(b => {
       const bookedDate = new Date(b.created_at).toLocaleDateString();
+      const isCancelled = b.payment_status === 'cancelled' || b.payment_status === 'refunded';
       html += `
         <div class="content-list-item">
           <span>
             <strong>${b.service_type}</strong> — booked ${bookedDate}
             <span style="font-family:'Inter',sans-serif; font-size:12px; opacity:0.6; text-transform:uppercase; margin-left:8px;">${b.payment_status}</span>
           </span>
-          <label style="text-transform:none; letter-spacing:normal; display:flex; align-items:center; gap:8px; cursor:pointer; font-family:'Inter',sans-serif; font-size:13px;">
-            <input type="checkbox" style="width:auto;" ${b.completed ? 'checked' : ''} onchange="toggleSessionCompleted('${b.id}', this.checked)">
-            Completed
-          </label>
+          <span style="display:flex; align-items:center; gap:14px;">
+            <label style="text-transform:none; letter-spacing:normal; display:flex; align-items:center; gap:8px; cursor:pointer; font-family:'Inter',sans-serif; font-size:13px;">
+              <input type="checkbox" style="width:auto;" ${b.completed ? 'checked' : ''} onchange="toggleSessionCompleted('${b.id}', this.checked)">
+              Completed
+            </label>
+            ${isCancelled ? '' : `<span class="danger" onclick="cancelBooking('${b.id}', false)">Cancel</span><span class="danger" onclick="cancelBooking('${b.id}', true)">Cancel &amp; Refund</span>`}
+          </span>
         </div>`;
     });
     container.innerHTML = html;
@@ -1127,6 +1218,29 @@ async function toggleSessionCompleted(bookingId, completed){
     });
     const data = await res.json();
     if(data.success){
+      document.getElementById('csSearchBtn').click();
+    } else {
+      alert(data.error || 'Something went wrong.');
+    }
+  } catch(err){
+    alert('Couldn\'t reach the server.');
+  }
+}
+
+async function cancelBooking(bookingId, refund){
+  const confirmMsg = refund
+    ? 'Cancel this booking AND issue a refund via Stripe? This cannot be undone.'
+    : 'Cancel this booking without a refund? This releases the slot but keeps the deposit, per your non-refundable policy.';
+  if(!confirm(confirmMsg)) return;
+  try{
+    const res = await fetch('/api/admin-cancel-booking', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'x-admin-password': ADMIN_PASSWORD},
+      body: JSON.stringify({ booking_id: bookingId, refund })
+    });
+    const data = await res.json();
+    if(data.success){
+      alert(refund ? `Cancelled and refunded £${data.refundedAmount}.` : 'Cancelled — no refund issued.');
       document.getElementById('csSearchBtn').click();
     } else {
       alert(data.error || 'Something went wrong.');
