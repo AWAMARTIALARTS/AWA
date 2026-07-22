@@ -1,5 +1,6 @@
 const supabase = require('../lib/supabase');
 const { stripe } = require('../lib/stripe');
+const { sendBookingNotification } = require('../lib/email');
 
 function buffer(req) {
   return new Promise((resolve, reject) => {
@@ -28,9 +29,7 @@ async function releaseBookingSlots(sessionId) {
     .select('id, slot_id')
     .eq('stripe_checkout_session_id', sessionId)
     .eq('payment_status', 'awaiting_payment');
-
   if (!bookings || !bookings.length) return;
-
   for (const booking of bookings) {
     if (booking.slot_id) {
       const { data: slot } = await supabase.from('slots').select('booked_count').eq('id', booking.slot_id).single();
@@ -44,10 +43,8 @@ async function releaseBookingSlots(sessionId) {
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).end();
-
   const sig = req.headers['stripe-signature'];
   const rawBody = await buffer(req);
-
   let event;
   try {
     event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
@@ -74,10 +71,17 @@ module.exports = async (req, res) => {
     } else if (serviceType) {
       // Personal Training / Group / Combat Fitness booking checkout —
       // mark every booking row tied to this session as paid
-      await supabase
+      const { data: updatedBookings } = await supabase
         .from('bookings')
         .update({ payment_status: 'paid' })
-        .eq('stripe_checkout_session_id', session.id);
+        .eq('stripe_checkout_session_id', session.id)
+        .select();
+
+      if (updatedBookings && updatedBookings.length) {
+        for (const booking of updatedBookings) {
+          await sendBookingNotification(booking);
+        }
+      }
     }
   }
 
@@ -92,7 +96,6 @@ module.exports = async (req, res) => {
   if (event.type === 'customer.subscription.deleted' || event.type === 'customer.subscription.updated') {
     const sub = event.data.object;
     const isActive = sub.status === 'active' || sub.status === 'trialing';
-
     await supabase.from('members').update({ solo_challenge_active: isActive }).eq('stripe_solo_subscription_id', sub.id);
     await supabase.from('members').update({ fitness_active: isActive }).eq('stripe_fitness_subscription_id', sub.id);
   }
