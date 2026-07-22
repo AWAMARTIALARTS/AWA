@@ -49,5 +49,22 @@ module.exports = async (req, res) => {
 
   if (updateError) return res.status(500).json({ error: updateError.message });
 
+  // Release the slot: decrement booked_count so it shows as available again
+  if (booking.slot_id) {
+    const { data: slot, error: slotFetchError } = await supabase
+      .from('slots')
+      .select('booked_count')
+      .eq('id', booking.slot_id)
+      .single();
+
+    if (!slotFetchError && slot) {
+      const newCount = Math.max(0, slot.booked_count - 1);
+      await supabase
+        .from('slots')
+        .update({ booked_count: newCount })
+        .eq('id', booking.slot_id);
+    }
+  }
+
   res.status(200).json({ success: true, refunded: !!refund, refundedAmount });
 };
