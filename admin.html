@@ -72,6 +72,7 @@
       <button onclick="showAdminTab('calendar')">Manage Calendar</button>
       <button onclick="showAdminTab('timetable')">Academy Timetable</button>
       <button onclick="showAdminTab('submissions')">Video Submissions</button>
+      <button onclick="showAdminTab('clientsessions')">Client Sessions</button>
       <button onclick="showAdminTab('private')">Mission &amp; Syllabus (Private)</button>
     </div>
 
@@ -262,6 +263,16 @@
       <div class="card">
         <h3 style="font-size:16px; margin-bottom:16px;">Pending Review</h3>
         <div id="submissionsList"></div>
+      </div>
+    </div>
+
+    <div id="tab-clientsessions" style="display:none;">
+      <div class="card">
+        <h3 style="font-size:16px; margin-bottom:16px;">Client Session History</h3>
+        <p style="font-family:'Inter',sans-serif; font-size:13.5px; opacity:0.7; margin-bottom:16px;">Search a client by email to see their full booking history and mark sessions as completed once they've happened.</p>
+        <div class="field"><label for="csEmail">Client Email</label><input type="email" id="csEmail"></div>
+        <button class="btn" id="csSearchBtn">Search</button>
+        <div id="csResults" style="margin-top:20px;"></div>
       </div>
     </div>
 
@@ -509,6 +520,7 @@ function showAdminTab(tab){
   document.getElementById('tab-calendar').style.display = tab === 'calendar' ? 'block' : 'none';
   document.getElementById('tab-timetable').style.display = tab === 'timetable' ? 'block' : 'none';
   document.getElementById('tab-submissions').style.display = tab === 'submissions' ? 'block' : 'none';
+  document.getElementById('tab-clientsessions').style.display = tab === 'clientsessions' ? 'block' : 'none';
   document.getElementById('tab-private').style.display = tab === 'private' ? 'block' : 'none';
   if(tab === 'submissions') loadSubmissions();
   if(tab === 'calendar') loadSlots();
@@ -834,6 +846,59 @@ async function deleteSlot(id){
   const data = await res.json();
   if(!data.success){ alert(data.error || 'Couldn\'t delete that slot.'); }
   loadSlots();
+}
+
+document.getElementById('csSearchBtn').addEventListener('click', async () => {
+  const email = document.getElementById('csEmail').value.trim();
+  const container = document.getElementById('csResults');
+  if(!email){ container.innerHTML = '<p style="opacity:0.6;">Enter an email first.</p>'; return; }
+  container.innerHTML = '<p style="opacity:0.6;">Loading…</p>';
+  try{
+    const res = await fetch('/api/admin-client-sessions?email=' + encodeURIComponent(email), {
+      headers: { 'x-admin-password': ADMIN_PASSWORD }
+    });
+    const data = await res.json();
+    if(!data.bookings || !data.bookings.length){
+      container.innerHTML = '<p style="opacity:0.6;">No bookings found for that email.</p>';
+      return;
+    }
+    let html = `<div style="font-family:'Inter',sans-serif; font-size:16px; margin-bottom:16px;"><strong style="color:var(--gold-bright);">${data.completedCount}</strong> completed session(s)</div>`;
+    data.bookings.forEach(b => {
+      const bookedDate = new Date(b.created_at).toLocaleDateString();
+      html += `
+        <div class="content-list-item">
+          <span>
+            <strong>${b.service_type}</strong> — booked ${bookedDate}
+            <span style="font-family:'Inter',sans-serif; font-size:12px; opacity:0.6; text-transform:uppercase; margin-left:8px;">${b.payment_status}</span>
+          </span>
+          <label style="text-transform:none; letter-spacing:normal; display:flex; align-items:center; gap:8px; cursor:pointer; font-family:'Inter',sans-serif; font-size:13px;">
+            <input type="checkbox" style="width:auto;" ${b.completed ? 'checked' : ''} onchange="toggleSessionCompleted('${b.id}', this.checked)">
+            Completed
+          </label>
+        </div>`;
+    });
+    container.innerHTML = html;
+  } catch(err){
+    container.innerHTML = '<p style="opacity:0.6;">Couldn\'t load sessions.</p>';
+  }
+});
+
+async function toggleSessionCompleted(bookingId, completed){
+  try{
+    const res = await fetch('/api/admin-client-sessions', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'x-admin-password': ADMIN_PASSWORD},
+      body: JSON.stringify({ booking_id: bookingId, completed })
+    });
+    const data = await res.json();
+    if(data.success){
+      document.getElementById('csSearchBtn').click();
+    } else {
+      alert(data.error || 'Something went wrong.');
+    }
+  } catch(err){
+    alert('Couldn\'t reach the server.');
+  }
 }
 
 async function loadSubmissions(){
