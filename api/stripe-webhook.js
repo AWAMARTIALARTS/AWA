@@ -1,6 +1,6 @@
 const supabase = require('../lib/supabase');
 const { stripe } = require('../lib/stripe');
-const { sendBookingNotification } = require('../lib/email');
+const { sendBookingNotification, sendCustomerConfirmation } = require('../lib/email');
 
 function buffer(req) {
   return new Promise((resolve, reject) => {
@@ -79,7 +79,20 @@ module.exports = async (req, res) => {
 
       if (updatedBookings && updatedBookings.length) {
         for (const booking of updatedBookings) {
+          // Notify the admin (existing feature)
           await sendBookingNotification(booking);
+
+          // Notify the customer (new) — look up the slot's date/time if there is one
+          let slot = null;
+          if (booking.slot_id) {
+            const { data: slotData } = await supabase
+              .from('slots')
+              .select('slot_date, slot_time')
+              .eq('id', booking.slot_id)
+              .single();
+            slot = slotData || null;
+          }
+          await sendCustomerConfirmation(booking, slot);
         }
       }
     }
