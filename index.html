@@ -425,30 +425,30 @@
       <hr class="rule" style="max-width:400px; margin:60px auto;">
 
       <div id="cfBookingArea" style="display:none;">
-      <div class="section-head" style="margin-bottom:24px;">
-        <div class="eyebrow">Full Payment Secures Your Spot</div>
-        <h2 style="font-size:26px;">Book Your Block</h2>
-      </div>
-
-      <form class="booking" id="cfForm">
-        <div class="form-grid">
-          <div class="field"><label for="cfName">Full Name</label><input type="text" id="cfName" required></div>
-          <div class="field"><label for="cfEmail">Email</label><input type="email" id="cfEmail" required></div>
-          <div class="field"><label for="cfPhone">Phone</label><input type="tel" id="cfPhone" required></div>
-          <div class="field">
-            <label for="cfType">Block</label>
-            <select id="cfType" required>
-              <option value="" disabled selected>Loading options…</option>
-            </select>
-          </div>
+        <div class="section-head" style="margin-bottom:24px;">
+          <div class="eyebrow">Full Payment Secures Your Spot</div>
+          <h2 style="font-size:26px;">Book Your Block</h2>
         </div>
 
-        <button type="submit" class="btn btn-primary" style="width:100%;" id="cfSubmitBtn">Pay &amp; Reserve Your Spot</button>
-        <div class="pay-methods"><span class="chip">Card</span><span class="chip">Apple Pay</span><span class="chip">Pay by Bank</span></div>
-        <div id="cfMsg"></div>
-      </form>
+        <form class="booking" id="cfForm">
+          <div class="form-grid">
+            <div class="field"><label for="cfName">Full Name</label><input type="text" id="cfName" required></div>
+            <div class="field"><label for="cfEmail">Email</label><input type="email" id="cfEmail" required></div>
+            <div class="field"><label for="cfPhone">Phone</label><input type="tel" id="cfPhone" required></div>
+            <div class="field">
+              <label for="cfType">Block</label>
+              <select id="cfType" required>
+                <option value="" disabled selected>Loading options…</option>
+              </select>
+            </div>
+          </div>
 
-      <div class="policy-note"><strong>Payment policy:</strong> full payment secures your place in the block. We'll discuss your sessions together, which run twice weekly — the main focus is developing your physical capabilities while following a structured striking syllabus, culminating in your AWA Strike Level assessment.</div>
+          <button type="submit" class="btn btn-primary" style="width:100%;" id="cfSubmitBtn">Pay &amp; Reserve Your Spot</button>
+          <div class="pay-methods"><span class="chip">Card</span><span class="chip">Apple Pay</span><span class="chip">Pay by Bank</span></div>
+          <div id="cfMsg"></div>
+        </form>
+
+        <div class="policy-note"><strong>Payment policy:</strong> full payment secures your place in the block. We'll discuss your sessions together, which run twice weekly — the main focus is developing your physical capabilities while following a structured striking syllabus, culminating in your AWA Strike Level assessment.</div>
       </div>
 
       <div class="lock-box" id="cfLockBox">
@@ -479,7 +479,7 @@
     <div class="eyebrow">Discipline · Respect · Growth</div>
     <hr class="rule" style="max-width:200px; margin:20px auto;">
     <p class="copy">© <span id="year"></span> All Walks Academy. All rights reserved.</p>
-    <p class="copy" style="margin-top:6px;"><a href="#" onclick="toggleAdminPreview(); return false;" id="previewToggleLink" style="opacity:0.4; text-decoration:underline;">Admin Preview</a></p>
+    <p class="copy" style="margin-top:6px;"><a href="#" onclick="toggleAdminPreview(); return false;" id="previewToggleLink" style="opacity:0.4; text-decoration:underline;">AWA Online</a></p>
   </div>
 </footer>
 
@@ -939,8 +939,15 @@ fetch('/api/membership-status')
       if (nav) nav.style.display = '';
       if (teaser) teaser.style.display = 'block';
     }
+    if (data.combat_fitness || ADMIN_PREVIEW) {
+      document.getElementById('cfBookingArea').style.display = 'block';
+      document.getElementById('cfLockBox').style.display = 'none';
+    } else {
+      document.getElementById('cfBookingArea').style.display = 'none';
+      document.getElementById('cfLockBox').style.display = 'block';
+    }
     if (ADMIN_PREVIEW){
-      document.getElementById('previewToggleLink').textContent = 'Admin Preview: ON (click to turn off)';
+      document.getElementById('previewToggleLink').textContent = 'AWA Online: ON (click to turn off)';
       document.getElementById('previewToggleLink').style.opacity = '0.8';
       document.getElementById('previewToggleLink').style.color = 'var(--gold-bright)';
     }
