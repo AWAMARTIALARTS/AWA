@@ -7,6 +7,7 @@ const SETTING_KEY = {
   solo_challenge: 'solo_challenge_live',
   fitness_subscription: 'fitness_subscription_live',
   combat_fitness: 'combat_fitness_live',
+  hybrid_membership: 'hybrid_membership_live',
 };
 module.exports = async (req, res) => {
   if (!checkAdmin(req)) return res.status(401).json({ error: 'Incorrect admin password.' });
