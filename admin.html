@@ -412,8 +412,9 @@
 const LAUNCH_PRODUCTS = [
   { key: 'academy_training', label: 'Academy Training (Classes)' },
   { key: 'combat_fitness', label: 'Combat Fitness Transformation' },
-  { key: 'solo_challenge', label: 'AWA Solo Challenge — £50/month' },
-  { key: 'fitness_subscription', label: 'AWA Fitness Subscription — £25/month' },
+  { key: 'solo_challenge', label: 'AWA Solo Challenge' },
+  { key: 'fitness_subscription', label: 'AWA Fitness Subscription' },
+  { key: 'hybrid_membership', label: '1-to-1 Hybrid Subscription (4 Weeks)' },
 ];
 
 function buildLaunchRows(){
@@ -437,9 +438,7 @@ async function loadLaunchStatus(){
     LAUNCH_PRODUCTS.forEach(p => {
       const el = document.getElementById('status-' + p.key);
       if (!el) return;
-      const isLive = p.key === 'academy_training' ? data.academy_training
-        : p.key === 'solo_challenge' ? data.solo_challenge
-        : data.fitness_subscription;
+      const isLive = data[p.key];
       el.textContent = isLive ? 'Live — visible to the public' : 'Not live — hidden, safe to keep building';
       el.style.color = isLive ? '#8fd68f' : '';
     });
