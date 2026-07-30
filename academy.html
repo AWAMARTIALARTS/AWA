@@ -20,7 +20,7 @@
   .btn:hover{ background:var(--gold-bright); }
   .field{ margin-bottom:18px; }
   label{ font-family:'Inter', sans-serif; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--gold); display:block; margin-bottom:6px; }
-  input{ width:100%; background:var(--black-2); border:1px solid var(--line); color:var(--parchment); padding:12px 14px; font-family:'Inter', sans-serif; font-size:15px; border-radius:2px; }
+  input, select{ width:100%; background:var(--black-2); border:1px solid var(--line); color:var(--parchment); padding:12px 14px; font-family:'Inter', sans-serif; font-size:15px; border-radius:2px; }
   .card{ border:1px solid var(--gold); padding:28px; margin-bottom:20px; background:linear-gradient(180deg, rgba(201,162,75,0.05), transparent); }
   .topics-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
   .topic-card{ border:1px solid var(--line); padding:22px; cursor:pointer; text-align:center; }
@@ -54,8 +54,7 @@
       <div class="field">
         <label for="joinProduct">Which Membership?</label>
         <select id="joinProduct">
-          <option value="solo_challenge">AWA Solo Challenge — £50/month (graded syllabus, video assessment, level progression)</option>
-          <option value="fitness">AWA Fitness Subscription — £25/month (gym sessions, bag work, general training content)</option>
+          <option value="" disabled selected>Loading options…</option>
         </select>
       </div>
       <button class="btn" id="joinBtn" style="width:100%;">Subscribe &amp; Join</button>
@@ -133,6 +132,28 @@ function showPage(name){
   if(name === 'dashboard') loadDashboard();
 }
 
+async function loadMembershipOptions(){
+  const select = document.getElementById('joinProduct');
+  try{
+    const res = await fetch('/api/services?category=membership');
+    const { services } = await res.json();
+    if(!services || !services.length){
+      select.innerHTML = '<option value="" disabled selected>No memberships available right now</option>';
+      return;
+    }
+    select.innerHTML = '';
+    services.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.key;
+      opt.textContent = `${s.label} — £${s.fee}/month`;
+      select.appendChild(opt);
+    });
+  } catch(err){
+    select.innerHTML = '<option value="" disabled selected>Couldn\'t load options — please refresh</option>';
+  }
+}
+loadMembershipOptions();
+
 document.getElementById('joinBtn').addEventListener('click', async () => {
   const msg = document.getElementById('joinMsg');
   const email = document.getElementById('joinEmail').value;
@@ -140,6 +161,10 @@ document.getElementById('joinBtn').addEventListener('click', async () => {
   const product = document.getElementById('joinProduct').value;
   if(!email || password.length < 8){
     msg.style.display = 'block'; msg.textContent = 'Enter a valid email and a password of at least 8 characters.';
+    return;
+  }
+  if(!product){
+    msg.style.display = 'block'; msg.textContent = 'Please choose a membership option.';
     return;
   }
   try{
@@ -284,7 +309,7 @@ async function openTopic(topic, label){
   fetch('/api/membership-status')
     .then(res => res.json())
     .then(data => {
-      if (!data.solo_challenge && !data.fitness_subscription && !ADMIN_PREVIEW) {
+      if (!data.solo_challenge && !data.fitness_subscription && !data.hybrid_membership && !ADMIN_PREVIEW) {
         showPage('coming-soon');
         return;
       }
