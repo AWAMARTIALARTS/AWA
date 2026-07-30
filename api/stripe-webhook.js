@@ -11,14 +11,20 @@ function buffer(req) {
   });
 }
 
+// FIXED: these keys must match the actual `key` column in the services
+// table exactly ('fitness_subscription', not 'fitness') — this mismatch
+// was silently preventing Fitness Subscription members from activating.
+// 'membership' is the Hybrid (1-to-1 + content) plan.
 const ACTIVE_COLUMN = {
   solo_challenge: 'solo_challenge_active',
-  fitness: 'fitness_active',
+  fitness_subscription: 'fitness_active',
+  membership: 'membership_active',
 };
 
 const SUBSCRIPTION_ID_COLUMN = {
   solo_challenge: 'stripe_solo_subscription_id',
-  fitness: 'stripe_fitness_subscription_id',
+  fitness_subscription: 'stripe_fitness_subscription_id',
+  membership: 'stripe_membership_subscription_id',
 };
 
 // Releases the slot(s) tied to an abandoned/unpaid booking checkout, so
@@ -59,7 +65,7 @@ module.exports = async (req, res) => {
     const serviceType = session.metadata && session.metadata.service_type;
 
     if (memberId && ACTIVE_COLUMN[product]) {
-      // Membership subscription checkout (Solo Challenge / Fitness Subscription)
+      // Membership subscription checkout (Solo Challenge / Fitness Subscription / Hybrid)
       await supabase
         .from('members')
         .update({
@@ -82,7 +88,7 @@ module.exports = async (req, res) => {
           // Notify the admin (existing feature)
           await sendBookingNotification(booking);
 
-          // Notify the customer (new) — look up the slot's date/time if there is one
+          // Notify the customer — look up the slot's date/time if there is one
           let slot = null;
           if (booking.slot_id) {
             const { data: slotData } = await supabase
@@ -111,6 +117,7 @@ module.exports = async (req, res) => {
     const isActive = sub.status === 'active' || sub.status === 'trialing';
     await supabase.from('members').update({ solo_challenge_active: isActive }).eq('stripe_solo_subscription_id', sub.id);
     await supabase.from('members').update({ fitness_active: isActive }).eq('stripe_fitness_subscription_id', sub.id);
+    await supabase.from('members').update({ membership_active: isActive }).eq('stripe_membership_subscription_id', sub.id);
   }
 
   res.status(200).json({ received: true });
