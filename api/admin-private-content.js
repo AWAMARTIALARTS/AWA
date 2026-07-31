@@ -4,7 +4,7 @@ function checkAdmin(req) {
 }
 const PRIVATE_KEYS = ['private_cardio', 'private_strength', 'private_power', 'private_explosiveness', 'private_movement', 'private_mission', 'private_syllabus'];
 
-const SKILL_PREFIXES = ['skill_muaythai', 'skill_boxing', 'skill_blocking', 'skill_counters', 'skill_punchmove', 'skill_headmovement'];
+const SKILL_PREFIXES = ['skill_muaythai', 'skill_boxing', 'skill_blocking', 'skill_counters', 'skill_punchmove', 'skill_headmovement', 'skill_footwork'];
 const SKILL_KEYS = SKILL_PREFIXES.flatMap(prefix => [1, 2, 3, 4, 5].map(level => `${prefix}_${level}`));
 
 const KEYS = [...PRIVATE_KEYS, ...SKILL_KEYS];
