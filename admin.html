@@ -518,12 +518,20 @@ populateHourRangeOptions();
 populateBulkStartOptions();
 
 function populateHourRangeOptions(){
+  const times = [];
+  for (let h = 6; h <= 9; h++) {
+    times.push(h * 60);
+  }
+  let minutes = 10 * 60;
+  const endMinutes = 22 * 60;
+  while (minutes <= endMinutes) {
+    times.push(minutes);
+    minutes += 75;
+  }
   [document.getElementById('bStart'), document.getElementById('bEnd'), document.getElementById('bulkEndTime')].forEach(select => {
-    let minutes = 6 * 60;
-    const endMinutes = 22 * 60;
-    while (minutes <= endMinutes) {
-      let h = Math.floor(minutes / 60);
-      const m = minutes % 60;
+    times.forEach(mins => {
+      let h = Math.floor(mins / 60);
+      const m = mins % 60;
       const ampm = h >= 12 ? 'pm' : 'am';
       let h12 = h % 12;
       if (h12 === 0) h12 = 12;
@@ -532,8 +540,7 @@ function populateHourRangeOptions(){
       opt.value = label;
       opt.textContent = label;
       select.appendChild(opt);
-      minutes += 75;
-    }
+    });
   });
 }
 
