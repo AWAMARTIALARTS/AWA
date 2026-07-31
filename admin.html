@@ -362,7 +362,10 @@
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
           <h3 style="font-size:18px; margin:0;" data-title></h3>
-          <span style="cursor:pointer; font-size:18px;" data-edit-icon title="Edit">✏️</span>
+          <span>
+            <span style="cursor:pointer; font-size:18px;" data-edit-icon title="Edit">✏️</span>
+            <span class="danger" style="margin-left:12px;" data-delete title="Remove this service">Delete</span>
+          </span>
         </div>
         <p data-display style="font-family:'Inter',sans-serif; font-size:20px; color:var(--gold-bright);"></p>
         <div data-edit-area style="display:none;">
@@ -735,6 +738,24 @@ async function loadPricing(){
       el.querySelector('[data-edit-icon]').addEventListener('click', () => {
         cardDiv.querySelector('[data-display]').style.display = 'none';
         cardDiv.querySelector('[data-edit-area]').style.display = 'block';
+      });
+      el.querySelector('[data-delete]').addEventListener('click', async () => {
+        if(!confirm(`Remove "${svc.label}" from Manage Prices? It will stop appearing on the site, but stays in the database in case you need it again.`)) return;
+        try{
+          const delRes = await fetch('/api/admin-services', {
+            method: 'DELETE',
+            headers: {'Content-Type':'application/json', 'x-admin-password': ADMIN_PASSWORD},
+            body: JSON.stringify({ key: svc.key })
+          });
+          const delData = await delRes.json();
+          if(delData.success){
+            cardDiv.remove();
+          } else {
+            alert(delData.error || 'Something went wrong.');
+          }
+        } catch(err){
+          alert('Couldn\'t reach the server.');
+        }
       });
       el.querySelector('[data-cancel]').addEventListener('click', () => {
         cardDiv.querySelector('[data-label-input]').value = svc.label;
