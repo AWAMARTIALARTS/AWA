@@ -226,6 +226,17 @@
             <option value="academy">Academy Training</option>
           </select>
         </div>
+        <div style="display:flex; gap:12px;">
+          <div class="field" style="flex:1;">
+            <label for="viewSlotStartDate">From Date</label>
+            <input type="date" id="viewSlotStartDate" onchange="loadSlots()">
+          </div>
+          <div class="field" style="flex:1;">
+            <label for="viewSlotEndDate">To Date</label>
+            <input type="date" id="viewSlotEndDate" onchange="loadSlots()">
+          </div>
+        </div>
+        <button class="btn" style="background:transparent; border:1px solid var(--line); color:var(--parchment); font-size:12px; padding:8px 16px; margin-bottom:16px;" onclick="clearSlotDateFilter()">Clear Date Filter</button>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-family:'Inter',sans-serif; font-size:13px;">
           <label style="text-transform:none; letter-spacing:normal; display:flex; align-items:center; gap:8px; cursor:pointer;">
             <input type="checkbox" id="selectAllSlots" style="width:auto;" onchange="toggleSelectAllSlots()">Select All
@@ -477,11 +488,21 @@ let ADMIN_PASSWORD = '';
 function generateTimeOptions(){
   const select = document.getElementById('sTime');
   select.innerHTML = '';
-  let minutes = 6 * 60; // 6:00am
-  const endMinutes = 22 * 60; // 10:00pm cutoff — no slot starts after this
+  const times = [];
+  // 6am–9am: normal hourly slots
+  for (let h = 6; h <= 9; h++) {
+    times.push(h * 60);
+  }
+  // From 10am onward: 1hr15 spacing (60-min session + 15-min gap), until 10pm cutoff
+  let minutes = 10 * 60;
+  const endMinutes = 22 * 60;
   while (minutes <= endMinutes) {
-    let h = Math.floor(minutes / 60);
-    const m = minutes % 60;
+    times.push(minutes);
+    minutes += 75;
+  }
+  times.forEach(mins => {
+    let h = Math.floor(mins / 60);
+    const m = mins % 60;
     const ampm = h >= 12 ? 'pm' : 'am';
     let h12 = h % 12;
     if (h12 === 0) h12 = 12;
@@ -490,8 +511,7 @@ function generateTimeOptions(){
     opt.value = label;
     opt.textContent = label;
     select.appendChild(opt);
-    minutes += 75; // 1 hour 15 minutes — builds in a 15 min gap after a 60 min session
-  }
+  });
 }
 generateTimeOptions();
 populateHourRangeOptions();
@@ -1070,11 +1090,18 @@ document.getElementById('mbSubmitBtn').addEventListener('click', async () => {
 
 async function loadSlots(){
   const category = document.getElementById('viewSlotCategory').value;
+  const startDate = document.getElementById('viewSlotStartDate').value;
+  const endDate = document.getElementById('viewSlotEndDate').value;
   const container = document.getElementById('slotsList');
   container.innerHTML = '<p style="opacity:0.6;">Loading…</p>';
   document.getElementById('selectAllSlots').checked = false;
   try{
-    const url = '/api/admin-slots' + (category ? '?category=' + encodeURIComponent(category) : '');
+    const params = new URLSearchParams();
+    if(category) params.set('category', category);
+    if(startDate) params.set('start_date', startDate);
+    if(endDate) params.set('end_date', endDate);
+    const qs = params.toString();
+    const url = '/api/admin-slots' + (qs ? '?' + qs : '');
     const res = await fetch(url, { headers: { 'x-admin-password': ADMIN_PASSWORD } });
     const data = await res.json();
     if(!data.slots || !data.slots.length){
@@ -1093,6 +1120,12 @@ async function loadSlots(){
   } catch(err){
     container.innerHTML = '<p style="opacity:0.6;">Couldn\'t load slots.</p>';
   }
+}
+
+function clearSlotDateFilter(){
+  document.getElementById('viewSlotStartDate').value = '';
+  document.getElementById('viewSlotEndDate').value = '';
+  loadSlots();
 }
 
 function toggleSelectAllSlots(){
