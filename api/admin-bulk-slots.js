@@ -1,9 +1,7 @@
 const supabase = require('../lib/supabase');
-
 function checkAdmin(req) {
   return req.headers['x-admin-password'] === process.env.ADMIN_PASSWORD;
 }
-
 function toMinutes(timeStr) {
   const match = (timeStr || '').trim().match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
   if (!match) return null;
@@ -15,44 +13,46 @@ function toMinutes(timeStr) {
   if (ampm === 'am' && h === 12) h = 0;
   return h * 60 + m;
 }
-
-// Generates the same fixed 6:00am-9:00pm, 75-minutes-apart list used elsewhere
+// FIXED: matches the same time list used everywhere else on the site —
+// 6, 7, 8, 9am on the hour, then 75-minutes-apart from 10am onward.
+// The old version jumped straight from 9:45am to 11:00am, so exact 10am
+// starts were silently skipped.
 function allTimeOptions() {
-  const times = [];
-  let minutes = 6 * 60;
+  const minutesList = [];
+  for (let h = 6; h <= 9; h++) {
+    minutesList.push(h * 60);
+  }
+  let minutes = 10 * 60;
   const end = 22 * 60;
   while (minutes <= end) {
-    let h = Math.floor(minutes / 60);
-    const m = minutes % 60;
+    minutesList.push(minutes);
+    minutes += 75;
+  }
+  return minutesList.map(mins => {
+    let h = Math.floor(mins / 60);
+    const m = mins % 60;
     const ampm = h >= 12 ? 'pm' : 'am';
     let h12 = h % 12;
     if (h12 === 0) h12 = 12;
-    times.push(`${h12}:${m.toString().padStart(2, '0')}${ampm}`);
-    minutes += 75;
-  }
-  return times;
+    return `${h12}:${m.toString().padStart(2, '0')}${ampm}`;
+  });
 }
-
 module.exports = async (req, res) => {
   if (!checkAdmin(req)) return res.status(401).json({ error: 'Incorrect admin password.' });
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-
   const { category, days_of_week, start_time, end_time, start_date, weeks, capacity } = req.body || {};
   if (!category || !days_of_week || !days_of_week.length || !start_time || !end_time || !start_date || !weeks) {
     return res.status(400).json({ error: 'Missing required fields.' });
   }
-
   const startMin = toMinutes(start_time);
   const endMin = toMinutes(end_time);
   const times = allTimeOptions().filter(t => {
     const m = toMinutes(t);
     return m !== null && m >= startMin && m <= endMin;
   });
-
   if (!times.length) {
     return res.status(400).json({ error: 'No times fall within that range.' });
   }
-
   // Build every matching date across the requested number of weeks
   const dates = [];
   const start = new Date(start_date + 'T00:00:00');
@@ -64,7 +64,6 @@ module.exports = async (req, res) => {
       dates.push(d.toISOString().slice(0, 10));
     }
   }
-
   // Avoid creating duplicates of slots that already exist
   const { data: existing } = await supabase
     .from('slots')
@@ -72,9 +71,7 @@ module.exports = async (req, res) => {
     .eq('category', category)
     .gte('slot_date', dates[0])
     .lte('slot_date', dates[dates.length - 1]);
-
   const existingSet = new Set((existing || []).map(s => `${s.slot_date}|${s.slot_time}`));
-
   const rows = [];
   dates.forEach(date => {
     times.forEach(time => {
@@ -83,13 +80,10 @@ module.exports = async (req, res) => {
       }
     });
   });
-
   if (!rows.length) {
     return res.status(200).json({ success: true, created: 0, message: 'All matching slots already exist.' });
   }
-
   const { error } = await supabase.from('slots').insert(rows);
   if (error) return res.status(500).json({ error: error.message });
-
   res.status(200).json({ success: true, created: rows.length });
 };
