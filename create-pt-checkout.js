@@ -2,6 +2,15 @@ const supabase = require('../lib/supabase');
 const { stripe } = require('../lib/stripe');
 const { getService } = require('../lib/services');
 
+// How many session slots each multi-session service requires the customer
+// to pick before paying. Anything not listed here is a single-slot booking
+// (or, for group_training/combat_fitness one-offs, uses slot_id directly).
+const REQUIRED_SLOT_COUNT = {
+  block4: 4,       // Personal Training 4-week block
+  cf_4wk: 8,        // Combat Fitness 4-Week Block (twice weekly)
+  cf_8wk: 16,       // Combat Fitness Full 8-Week Program (twice weekly)
+};
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
@@ -13,16 +22,14 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Unknown service_type' });
     }
 
-    // Combat Fitness has no calendar — everything else needs at least one slot chosen up front
-    const isBlockBooking = service_type === 'block4';
-    const needsSlots = priceInfo.category !== 'combat_fitness';
-    const chosenSlotIds = isBlockBooking ? (slot_ids || []) : (slot_id ? [slot_id] : []);
+    const requiredCount = REQUIRED_SLOT_COUNT[service_type] || null;
+    const chosenSlotIds = requiredCount ? (slot_ids || []) : (slot_id ? [slot_id] : []);
 
-    if (needsSlots && !chosenSlotIds.length) {
+    if (!chosenSlotIds.length) {
       return res.status(400).json({ error: 'Please choose a session time first.' });
     }
-    if (isBlockBooking && chosenSlotIds.length !== 4) {
-      return res.status(400).json({ error: 'Please choose exactly 4 sessions for the 4-week block.' });
+    if (requiredCount && chosenSlotIds.length !== requiredCount) {
+      return res.status(400).json({ error: `Please choose exactly ${requiredCount} sessions for this option.` });
     }
 
     // Validate every chosen slot still has room, and reserve it now so nobody
@@ -37,7 +44,7 @@ module.exports = async (req, res) => {
       reservedSlots.push(slot);
     }
 
-    const siteUrl = process.env.SITE_URL || 'https://example.com';
+    const siteUrl = process.env.SITE_URL || 'https://allwalksacademy.com';
     const existing = await stripe.customers.list({ email, limit: 1 });
     const customer = existing.data[0] || await stripe.customers.create({ name, email, phone });
 
@@ -56,12 +63,16 @@ module.exports = async (req, res) => {
       ? `${priceInfo.label} — 50% deposit (non-refundable)`
       : `${priceInfo.label} — full payment`;
 
+    // Combat Fitness redirects back to the Combat Fitness page; everything
+    // else (Personal Training, 4-1 Group) redirects back to Personal Training
+    const returnAnchor = priceInfo.category === 'combat_fitness' ? 'cf' : 'pt';
+
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       customer: customer.id,
       payment_method_types: ['card'],
       allow_promotion_codes: true,
-      expires_at: Math.floor(Date.now() / 1000) + 30 * 60, // 30 minutes to complete payment
+      expires_at: Math.floor(Date.now() / 1000) + 40 * 60, // 40 minutes — safely clears Stripe's 30-min minimum
       line_items: [{
         price_data: {
           currency: 'gbp',
@@ -74,14 +85,14 @@ module.exports = async (req, res) => {
         setup_future_usage: 'off_session',
         metadata: { service_type }
       } : { metadata: { service_type } },
-      success_url: `${siteUrl}/#pt?paid=1`,
-      cancel_url: `${siteUrl}/#pt`,
+      success_url: `${siteUrl}/#${returnAnchor}?paid=1`,
+      cancel_url: `${siteUrl}/#${returnAnchor}`,
       metadata: { service_type, customer_name: name, customer_phone: phone || '' }
     });
 
     // Reserve every chosen slot now, and create one booking row per slot
-    // (a 4-week block becomes 4 linked booking rows sharing the same
-    // checkout session id, so the webhook can mark them all paid together)
+    // (a multi-session booking becomes multiple linked booking rows sharing
+    // the same checkout session id, so the webhook can mark them all paid together)
     for (const slot of reservedSlots) {
       await supabase.from('slots').update({ booked_count: slot.booked_count + 1 }).eq('id', slot.id);
       await supabase.from('bookings').insert({
@@ -98,25 +109,9 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Combat Fitness has no slot — still needs its one booking row
-    if (!needsSlots) {
-      await supabase.from('bookings').insert({
-        slot_id: null,
-        customer_name: name,
-        customer_email: email,
-        customer_phone: phone || null,
-        service_type,
-        fee_total: priceInfo.fee,
-        deposit_amount: deposit,
-        balance_amount: priceInfo.mode === 'deposit' ? balance : 0,
-        payment_status: 'awaiting_payment',
-        stripe_checkout_session_id: session.id
-      });
-    }
-
     res.status(200).json({ url: session.url });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Something went wrong creating checkout.' });
+    res.status(500).json({ error: err.message ? `Something went wrong: ${err.message}` : 'Something went wrong creating checkout.' });
   }
 };
