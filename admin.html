@@ -593,14 +593,11 @@ function populateBulkStartOptions(){
   const select = document.getElementById('bulkStartTime');
   select.innerHTML = '';
   const times = [];
-  for (let h = 6; h <= 9; h++) {
-    times.push(h * 60);
-  }
-  let minutes = 10 * 60;
+  let minutes = 6 * 60;
   const endMinutes = 22 * 60;
   while (minutes <= endMinutes) {
     times.push(minutes);
-    minutes += 75;
+    minutes += 30;
   }
   times.forEach(mins => {
     let h = Math.floor(mins / 60);
