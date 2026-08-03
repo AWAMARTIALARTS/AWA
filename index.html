@@ -428,19 +428,26 @@
         <div class="section-head" style="margin-bottom:24px;">
           <div class="eyebrow">Full Payment Secures Your Spot</div>
           <h2 style="font-size:26px;">Book Your Block</h2>
+          <p>Pick your block, then select your session times — you'll need to choose every session upfront before paying.</p>
         </div>
 
-        <form class="booking" id="cfForm">
+        <div class="field" style="max-width:420px; margin:0 auto 40px;">
+          <label for="cfType">Block</label>
+          <select id="cfType" required>
+            <option value="" disabled selected>Loading options…</option>
+          </select>
+        </div>
+
+        <div class="avail" id="cfLiveCalendar" style="display:none;">
+          <div id="cfLiveSlots"></div>
+          <div id="cfPickMsg" style="text-align:center; margin-top:16px; font-family:'Inter',sans-serif; opacity:0.8;"></div>
+        </div>
+
+        <form class="booking" id="cfForm" style="display:none;">
           <div class="form-grid">
             <div class="field"><label for="cfName">Full Name</label><input type="text" id="cfName" required></div>
             <div class="field"><label for="cfEmail">Email</label><input type="email" id="cfEmail" required></div>
-            <div class="field"><label for="cfPhone">Phone</label><input type="tel" id="cfPhone" required></div>
-            <div class="field">
-              <label for="cfType">Block</label>
-              <select id="cfType" required>
-                <option value="" disabled selected>Loading options…</option>
-              </select>
-            </div>
+            <div class="field full"><label for="cfPhone">Phone</label><input type="tel" id="cfPhone" required></div>
           </div>
 
           <button type="submit" class="btn btn-primary" style="width:100%;" id="cfSubmitBtn">Pay &amp; Reserve Your Spot</button>
@@ -781,6 +788,7 @@ async function loadCfServiceOptions(){
     const { services } = await res.json();
     select.innerHTML = '<option value="" disabled selected>Choose a block</option>';
     services.forEach(s => {
+      CF_REQUIRED_COUNT[s.key] = s.key === 'cf_8wk' ? 16 : 8;
       const opt = document.createElement('option');
       opt.value = s.key;
       opt.textContent = `${s.label} — £${s.fee}`;
@@ -790,14 +798,80 @@ async function loadCfServiceOptions(){
     select.innerHTML = '<option value="" disabled selected>Couldn\'t load options — please refresh</option>';
   }
 }
+const CF_REQUIRED_COUNT = {};
+let cfChosenSlots = [];
 loadCfServiceOptions();
+
+document.getElementById('cfType').addEventListener('change', () => {
+  cfChosenSlots = [];
+  document.getElementById('cfForm').style.display = 'none';
+  loadCfLiveCalendar(document.getElementById('cfType').value);
+});
+
+async function loadCfLiveCalendar(key){
+  const wrap = document.getElementById('cfLiveCalendar');
+  const container = document.getElementById('cfLiveSlots');
+  const pickMsg = document.getElementById('cfPickMsg');
+  if(!key){ wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  container.innerHTML = '<p style="text-align:center; font-family:\'Inter\',sans-serif; opacity:0.6;">Loading availability…</p>';
+  const needed = CF_REQUIRED_COUNT[key] || 8;
+  try{
+    const res = await fetch('/api/availability?category=combat_fitness');
+    const { slots } = await res.json();
+    if(!slots.length){
+      container.innerHTML = '<p style="text-align:center; font-family:\'Inter\',sans-serif; opacity:0.6;">No sessions scheduled right now — check back soon.</p>';
+      return;
+    }
+    pickMsg.textContent = `0/${needed} sessions selected.`;
+    const byDate = {};
+    slots.forEach(s => { (byDate[s.slot_date] = byDate[s.slot_date] || []).push(s); });
+    container.innerHTML = '';
+    Object.keys(byDate).sort().forEach(date => {
+      const dayWrap = document.createElement('div');
+      dayWrap.className = 'avail-day';
+      dayWrap.innerHTML = `<h3>${formatDateLabel(date)}</h3><div class="slots"></div>`;
+      const slotsEl = dayWrap.querySelector('.slots');
+      byDate[date].forEach(s => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'slot' + (s.full ? ' booked' : '');
+        btn.textContent = s.slot_time;
+        if(s.full){ btn.disabled = true; }
+        else {
+          btn.addEventListener('click', () => {
+            const idx = cfChosenSlots.findIndex(c => c.id === s.id);
+            if(idx >= 0){
+              cfChosenSlots.splice(idx, 1);
+              btn.classList.remove('selected');
+            } else if(cfChosenSlots.length < needed){
+              cfChosenSlots.push(s);
+              btn.classList.add('selected');
+            }
+            pickMsg.textContent = `${cfChosenSlots.length}/${needed} sessions selected.`;
+            if(cfChosenSlots.length === needed){
+              document.getElementById('cfForm').style.display = 'block';
+              pickMsg.textContent = `${needed}/${needed} selected — fill in your details below to secure them.`;
+            } else {
+              document.getElementById('cfForm').style.display = 'none';
+            }
+          });
+        }
+        slotsEl.appendChild(btn);
+      });
+      container.appendChild(dayWrap);
+    });
+  } catch(err){
+    container.innerHTML = '<p style="text-align:center; font-family:\'Inter\',sans-serif; opacity:0.6;">Couldn\'t load availability. Please refresh.</p>';
+  }
+}
 
 document.getElementById('cfForm').addEventListener('submit', async function(e){
   e.preventDefault();
   const msg = document.getElementById('cfMsg');
   const btn = document.getElementById('cfSubmitBtn');
   const key = document.getElementById('cfType').value;
-  if(!key) return;
+  if(!key || !cfChosenSlots.length) return;
   btn.disabled = true; btn.textContent = 'Redirecting to payment…';
   try{
     const res = await fetch('/api/create-pt-checkout', {
@@ -807,7 +881,8 @@ document.getElementById('cfForm').addEventListener('submit', async function(e){
         service_type: key,
         name: document.getElementById('cfName').value,
         email: document.getElementById('cfEmail').value,
-        phone: document.getElementById('cfPhone').value
+        phone: document.getElementById('cfPhone').value,
+        slot_ids: cfChosenSlots.map(s => s.id)
       })
     });
     const data = await res.json();
