@@ -523,6 +523,45 @@ generateTimeOptions();
 populateHourRangeOptions();
 populateBulkStartOptions();
 
+function parseTimeToMinutes(label){
+  const match = (label || '').match(/^(\d{1,2}):(\d{2})(am|pm)$/i);
+  if(!match) return null;
+  let [, h, m, ampm] = match;
+  h = parseInt(h, 10); m = parseInt(m, 10); ampm = ampm.toLowerCase();
+  if(ampm === 'pm' && h !== 12) h += 12;
+  if(ampm === 'am' && h === 12) h = 0;
+  return h * 60 + m;
+}
+
+function minutesToLabel(mins){
+  let h = Math.floor(mins / 60);
+  const m = mins % 60;
+  const ampm = h >= 12 ? 'pm' : 'am';
+  let h12 = h % 12;
+  if (h12 === 0) h12 = 12;
+  return `${h12}:${m.toString().padStart(2, '0')}${ampm}`;
+}
+
+function refreshBulkEndOptions(){
+  const startVal = document.getElementById('bulkStartTime').value;
+  const startMins = parseTimeToMinutes(startVal);
+  const select = document.getElementById('bulkEndTime');
+  select.innerHTML = '';
+  if(startMins === null) return;
+  const cutoff = 22 * 60; // 10pm — no slot starts after this
+  let mins = startMins;
+  while(mins <= cutoff){
+    const label = minutesToLabel(mins);
+    const opt = document.createElement('option');
+    opt.value = label;
+    opt.textContent = label;
+    select.appendChild(opt);
+    mins += 75;
+  }
+}
+document.getElementById('bulkStartTime').addEventListener('change', refreshBulkEndOptions);
+refreshBulkEndOptions();
+
 function populateHourRangeOptions(){
   const times = [];
   for (let h = 6; h <= 9; h++) {
@@ -552,19 +591,29 @@ function populateHourRangeOptions(){
 
 function populateBulkStartOptions(){
   const select = document.getElementById('bulkStartTime');
-  let minutes = 0;
-  while (minutes < 24 * 60) {
-    let h = Math.floor(minutes / 60);
+  select.innerHTML = '';
+  const times = [];
+  for (let h = 6; h <= 9; h++) {
+    times.push(h * 60);
+  }
+  let minutes = 10 * 60;
+  const endMinutes = 22 * 60;
+  while (minutes <= endMinutes) {
+    times.push(minutes);
+    minutes += 75;
+  }
+  times.forEach(mins => {
+    let h = Math.floor(mins / 60);
+    const m = mins % 60;
     const ampm = h >= 12 ? 'pm' : 'am';
     let h12 = h % 12;
     if (h12 === 0) h12 = 12;
-    const label = `${h12}:00${ampm}`;
+    const label = `${h12}:${m.toString().padStart(2, '0')}${ampm}`;
     const opt = document.createElement('option');
     opt.value = label;
     opt.textContent = label;
     select.appendChild(opt);
-    minutes += 60;
-  }
+  });
 }
 
 document.getElementById('bulkAddBtn').addEventListener('click', async () => {
