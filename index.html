@@ -157,7 +157,7 @@
       <li><button onclick="showPage('home')" data-nav="home">Home</button></li>
       <li><button onclick="showPage('pt')" data-nav="pt">Personal Training</button></li>
       <li id="navAcademyTraining" style="display:none;"><button onclick="showPage('ac')" data-nav="ac">Academy Training</button></li>
-      <li><button onclick="showPage('cf')" data-nav="cf">Combat Fitness</button></li>
+      <li id="navCombatFitness" style="display:none;"><button onclick="showPage('cf')" data-nav="cf">Combat Fitness</button></li>
       <li id="navAcademyLink" style="display:none;"><a href="academy.html" style="font-family:'Inter', sans-serif; font-size:13px; letter-spacing:0.06em; text-transform:uppercase; color:var(--gold-bright); opacity:0.85; padding:8px 14px; border:1px solid var(--gold); border-radius:2px; text-decoration:none;">Academy Login</a></li>
     </ul>
   </nav>
@@ -183,7 +183,7 @@
           <p>Structured 4-week themed group training. Pay your session fee, then unlock the calendar to pick your class.</p>
           <button class="btn btn-primary" onclick="showPage('ac')">Explore Academy Training</button>
         </div>
-        <div class="path-card cf">
+        <div class="path-card cf" id="pathCombatFitness" style="display:none;">
           <span class="tag">Path Three</span>
           <h3>Combat Fitness Transformation</h3>
           <p>An 8-week strength & conditioning and striking program, graded through the AWA Strike Level system.</p>
@@ -1017,9 +1017,16 @@ fetch('/api/membership-status')
     if (data.combat_fitness || ADMIN_PREVIEW) {
       document.getElementById('cfBookingArea').style.display = 'block';
       document.getElementById('cfLockBox').style.display = 'none';
+      const cfNav = document.getElementById('navCombatFitness');
+      const cfCard = document.getElementById('pathCombatFitness');
+      if (cfNav) cfNav.style.display = '';
+      if (cfCard) cfCard.style.display = '';
     } else {
       document.getElementById('cfBookingArea').style.display = 'none';
       document.getElementById('cfLockBox').style.display = 'block';
+      if (window.location.hash.replace('#','').split('?')[0] === 'cf') {
+        showPage('home');
+      }
     }
     if (ADMIN_PREVIEW){
       document.getElementById('previewToggleLink').textContent = 'AWA Online: ON (click to turn off)';
